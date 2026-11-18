@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creator Performance & GMV Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf7f7;
+  --surface:#ffffff;
+  --ink:#231414;
+  --muted:#735c5c;
+  --line:#e6d8d8;
+  --accent:#b91c1c;
+  --accent-dark:#7f1d1d;
+  --accent-soft:#fdf2f2;
+  --bar:#fee2e2;
+  --up:#15803d;
+  --upbg:#dcfce7;
+  --down:#b91c1c;
+  --downbg:#fee2e2;
+  --warn:#92400e;
+  --warnbg:#fef3c7;
+  --vid:#334155;
+  --sidebar-w:254px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Public Sans",system-ui,sans-serif}
+input,textarea,button,select{font:inherit;color:inherit}
+textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--surface);resize:vertical;min-height:52px;font-size:15px}
+button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;transition:all .15s}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;padding:9px 18px}
+button.primary:hover{background:var(--accent-dark)}
+.seg{display:inline-flex;width:100%}
+.seg button{flex:1;border-radius:0;margin-left:-1px;padding:6px 8px;font-size:12px;text-align:center}
+.seg button:first-child{border-radius:6px 0 0 6px;margin:0}.seg button:last-child{border-radius:0 6px 6px 0}
+.seg .on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hidden{display:none!important}
+
+/* Layout & Sidebar */
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sidebar-w);
+  background:var(--surface);
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  position:fixed;
+  top:0;bottom:0;left:0;
+  z-index:30;
+  padding:20px 14px;
+  overflow-y:auto;
+  transition:transform .2s ease;
+}
+.brand{padding:0 8px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.brand h1{font-size:18px;margin:0;font-weight:700;color:var(--accent-dark);letter-spacing:-.01em}
+.brand .h{font-size:12px;margin-top:2px}
+.nav-group-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 10px 8px}
+.nav-list{display:flex;flex-direction:column;gap:4px}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;
+  width:100%;text-align:left;
+  border:1px solid transparent;
+  background:transparent;
+  padding:9px 12px;
+  border-radius:8px;
+  font-size:14px;font-weight:500;
+  color:var(--ink);
+}
+.nav-btn:hover{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.nav-btn.on{background:var(--accent);color:#fff;font-weight:600}
+.nav-btn svg{width:17px;height:17px;flex-shrink:0;opacity:.85}
+.nav-btn.on svg{opacity:1}
+
+.sb-foot{border-top:1px solid var(--line);padding-top:14px;margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.sb-ctrl-row{display:flex;flex-direction:column;gap:4px}
+.sb-ctrl-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
+
+/* Exchange Rate Box in Sidebar */
+.fx-box{display:flex;gap:4px;align-items:center}
+.fx-wrap{position:relative;flex:1;min-width:0}
+.fx-wrap span{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--muted);pointer-events:none}
+.fx-wrap input{width:100%;border:1px solid var(--line);border-radius:6px;padding:5px 8px 5px 26px;font-size:13px;font-weight:600;background:#fdfbfb}
+.fx-btn{padding:5px 9px;font-size:12px;font-weight:600}
+.fx-btn.apply{background:var(--accent);border-color:var(--accent);color:#fff}
+.fx-btn.apply:hover{background:var(--accent-dark)}
+.fx-tag{font-size:10px;padding:1px 6px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-weight:700;text-transform:none}
+
+.main{flex:1;margin-left:var(--sidebar-w);min-width:0}
+.wrap{max-width:1020px;margin:0 auto;padding:22px 20px 60px}
+
+/* Mobile Header & Drawer */
+.mob-bar{
+  display:none;
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  padding:12px 16px;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;top:0;z-index:20;
+}
+.mob-bar b{font-size:16px;color:var(--accent-dark)}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(35,20,20,.4);z-index:25}
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .backdrop.open{display:block}
+  .main{margin-left:0}
+  .mob-bar{display:flex}
+  .wrap{padding:16px 14px 50px}
+}
+
+h2{margin:0 0 2px;font-size:20px;letter-spacing:-.01em}
+.h{color:var(--muted);font-size:13px}
+
+/* Month Switcher & Filter Pills */
+.m-switch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
+.m-switch.in-card{margin:0;padding:10px 18px 12px;border-top:1px solid var(--line);background:#fdfafa}
+.m-pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;color:var(--muted);transition:all .15s}
+.m-pill:hover{border-color:var(--accent);color:var(--ink)}
+.m-pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.m-pill .dot-og{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-left:5px;vertical-align:middle}
+.m-pill.on .dot-og{background:#fde68a}
+
+/* Quota Highlight Menu Cards */
+.quota-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+@media(max-width:720px){.quota-bar{grid-template-columns:1fr 1fr}}
+.q-card{
+  background:var(--surface);
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:11px 14px;
+  text-align:left;
+  cursor:pointer;
+  transition:all .15s;
+}
+.q-card:hover{border-color:var(--accent)}
+.q-card.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 2px 8px rgba(185,28,28,.08)}
+.q-card .q-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.q-card b{font-size:20px;font-weight:700;display:block;color:var(--ink)}
+.q-card small{font-size:12px;color:var(--muted)}
+.q-card.warn-under.on{border-color:#b91c1c;background:#fef2f2}
+.q-card.warn-exact.on{border-color:#b45309;background:#fffbeb}
+.q-card.warn-over.on{border-color:#15803d;background:#f0fdf4}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.badge-under{background:var(--downbg);color:var(--down)}
+.badge-exact{background:var(--warnbg);color:var(--warn)}
+.badge-over{background:var(--upbg);color:var(--up)}
+
+tr.hl-under td{background:#fff8f8}
+tr.hl-exact td{background:#fffdf5}
+tr.hl-under:hover td{background:#fee2e2!important}
+tr.hl-exact:hover td{background:#fef3c7!important}
+
+.find{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+.box{flex:1;position:relative}
+.sug{position:absolute;top:100%;left:0;right:0;z-index:5;margin-top:4px;background:var(--surface);border:1px solid var(--line);border-radius:8px;max-height:300px;overflow:auto;box-shadow:0 8px 24px rgba(35,20,20,.12)}
+.sug div{padding:8px 14px;display:flex;flex-wrap:wrap;gap:0 10px;align-items:baseline;cursor:pointer}
+.sug div.on,.sug div:hover{background:var(--bar)}
+.sug span{color:var(--muted);font-size:13px}
+.sug small{color:var(--muted);font-size:12px;margin-left:auto;overflow:hidden;text-overflow:ellipsis}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:14px 0;overflow:hidden}
+.card-pad{padding:16px 18px}
+.card-title{font-size:15px;font-weight:700;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.facts{padding:12px 18px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.facts b{color:var(--ink);font-weight:600}
+.facts a{color:var(--accent);font-weight:600}
+
+/* Copyable Phone Number Pill */
+.copy-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:2px 8px;margin-left:4px;
+  font-size:12px;font-weight:600;
+  color:var(--accent-dark);background:var(--accent-soft);
+  border:1px solid var(--line);border-radius:6px;
+  cursor:pointer;line-height:1.4;
+}
+.copy-pill:hover{background:var(--bar);border-color:var(--accent)}
+.copy-pill.copied{background:var(--upbg);border-color:#86efac;color:var(--up)}
+.copy-pill svg{width:13px;height:13px;flex-shrink:0}
+
+.flag{margin:0 18px 12px;padding:8px 12px;border-radius:6px;background:var(--warnbg);color:var(--warn);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats.cols-5{grid-template-columns:repeat(5,1fr)}
+.stat{padding:12px 16px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0}
+.stat b{display:block;font-size:17px;font-weight:700}
+.stat b.rev-val{color:var(--accent-dark)}
+.stat span{color:var(--muted);font-size:12.5px}
+.stat small{display:block;font-size:12px;margin-top:2px;font-weight:600}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:9px 15px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12.5px;font-weight:600;color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+td.gmv{background:linear-gradient(90deg,var(--bar) var(--w),transparent var(--w));font-weight:600}
+td.rev-cell{color:var(--accent-dark);font-weight:600}
+.up{color:var(--up)}.down{color:var(--down)}.none{color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.miss{margin:12px 0;padding:10px 14px;border-radius:6px;background:var(--warnbg);color:var(--warn);font-size:14px}
+@media(max-width:780px){
+  .stats,.stats.cols-5{grid-template-columns:1fr 1fr}
+  .stat:nth-child(odd){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:14px 18px 0}
+.big{font-size:22px;font-weight:700;letter-spacing:-.01em}
+
+/* Rounded Creator Profile Picture */
+.creator-head{display:flex;align-items:center;gap:14px}
+.avatar{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid var(--line);background:var(--accent-soft);flex-shrink:0}
+.avatar-fb{width:54px;height:54px;border-radius:50%;border:2px solid var(--line);background:var(--accent-soft);color:var(--accent-dark);font-weight:700;font-size:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.avatar-sm{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:var(--accent-soft);vertical-align:middle;margin-right:8px;flex-shrink:0}
+.avatar-sm-fb{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent-dark);font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-right:8px;flex-shrink:0}
+
+.share{display:flex;gap:8px;align-items:center;padding:0 18px 12px;font-size:13px;color:var(--muted)}
+.share input{flex:1;min-width:0;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--muted);background:#fdfbfb}
+.note{margin:0 18px 12px;padding:8px 12px;border-radius:6px;background:var(--warnbg);color:var(--warn);font-size:14px}
+.pill{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-size:12px;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:10px 18px 0;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+
+/* Compact Charts */
+.chartbox{padding:4px 18px 12px;max-width:680px;margin:0 auto}
+.chart{width:100%;max-height:185px;height:auto;display:block}
+.chart .gl{stroke:var(--line)}
+.chart .ax{fill:var(--muted);font-size:10px}
+.chart .vx{fill:var(--vid)}
+.chart .bar{fill:var(--accent);transition:opacity .15s}
+.chart .bar.dim{opacity:.3}
+.chart .bar.sel{fill:var(--accent-dark)}
+.chart .bar.og{fill:var(--bar);stroke:var(--accent);stroke-dasharray:4 3}
+.chart .og-t{fill:var(--warn);font-weight:600}
+.chart .ln{fill:none;stroke:var(--vid);stroke-width:2}
+.chart .dot{fill:#fff;stroke:var(--vid);stroke-width:2}
+
+tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
+.lt td:nth-child(2),.lt th:nth-child(2),.lt td:last-child,.lt th:last-child{text-align:left}
+.lt td:last-child{white-space:normal}
+.tot td{font-weight:700;border-top:2px solid var(--line)}
+.foot{padding:10px 18px 14px;color:var(--muted);font-size:13px}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+#rq,#gq,#uq{border:1px solid var(--line);border-radius:6px;padding:7px 10px;background:var(--surface);width:230px;max-width:100%}
+.chk{font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.rt th[data-sort]{cursor:pointer;user-select:none}
+.rt th:first-child,.rt td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
+.rt{min-width:620px}
+.rev-stats{margin-bottom:14px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid-2{grid-template-columns:1fr}}
+.cat-row{margin-bottom:10px}
+.cat-row:last-child{margin-bottom:0}
+.cat-hdr{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.cat-track{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.cat-fill{height:100%;background:var(--accent);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="backdrop" class="backdrop" onclick="toggleSidebar(false)"></div>
+
+  <!-- SIDEBAR (MAIN TAB GROUP) -->
+  <aside id="sidebar" class="sidebar" aria-label="Main Navigation">
+    <div>
+      <div class="brand">
+        <h1 data-i18n="appTitle">Performa Kreator</h1>
+        <div class="h" id="who">Dashboard Langit Mediatama</div>
+      </div>
+
+      <div class="nav-group-label">Main Tab</div>
+      <nav class="nav-list" role="tablist">
+        <button id="tFind" class="nav-btn on" onclick="setTab('find')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span data-i18n="tabFind">Cari Kreator</span>
+        </button>
+        <button id="tGmv" class="nav-btn" onclick="setTab('gmv')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          <span data-i18n="tabGmv">Total GMV</span>
+        </button>
+        <button id="tUp" class="nav-btn" onclick="setTab('up')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 9 5 3-5 3V9z"/></svg>
+          <span data-i18n="tabUp">Monitoring Upload</span>
+        </button>
+        <button id="tRev" class="nav-btn" onclick="setTab('rev')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span data-i18n="tabRev">Pendapatan</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="sb-foot">
+      <div class="sb-ctrl-row">
+        <span class="sb-ctrl-lbl" data-i18n="lblLang">Bahasa</span>
+        <div class="seg" aria-label="Language switcher">
+          <button id="lID" class="on" onclick="setLang('id')">🇮🇩 ID</button>
+          <button id="lEN" onclick="setLang('en')">🇬🇧 EN</button>
+        </div>
+      </div>
+
+      <div class="sb-ctrl-row">
+        <span class="sb-ctrl-lbl" data-i18n="lblCur">Mata Uang</span>
+        <div class="seg" aria-label="Currency switcher">
+          <button id="cUSD" class="on" onclick="setCur('USD')">USD</button>
+          <button id="cIDR" onclick="setCur('IDR')">IDR</button>
+        </div>
+      </div>
+
+      <!-- EXCHANGE RATE SWITCHER MENU -->
+      <div class="sb-ctrl-row">
+        <span class="sb-ctrl-lbl">
+          <span data-i18n="lblFx">Kurs (1 USD)</span>
+          <span id="fxBadge" class="fx-tag hidden" data-i18n="fxCustom">Kustom</span>
+        </span>
+        <div class="fx-box">
+          <div class="fx-wrap">
+            <span>Rp</span>
+            <input id="fxInput" type="number" min="1" step="100" value="18000" aria-label="Kurs nilai tukar IDR per USD" onkeydown="if(event.key==='Enter'){event.preventDefault();applyFx();}">
+          </div>
+          <button class="fx-btn apply" onclick="applyFx()" title="Terapkan kurs" data-i18n="btnApply">OK</button>
+          <button id="fxReset" class="fx-btn hidden" onclick="resetFx()" title="Kembalikan ke kurs sheet">↺</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="main">
+    <div class="mob-bar">
+      <button onclick="toggleSidebar(true)" aria-label="Buka menu">☰ Menu</button>
+      <b data-i18n="appTitle">Performa Kreator</b>
+      <span style="width:64px"></span>
+    </div>
+
+    <div class="wrap">
+      <!-- TAB 1: CREATOR LOOKUP -->
+      <div id="vFind">
+        <div style="margin-bottom:14px">
+          <h2 data-i18n="tabFind">Cari Kreator</h2>
+          <div class="h" data-i18n="findSub">Cari performa penjualan GMV, pendapatan 5% ke agency, dan jumlah unggahan video per kreator.</div>
+        </div>
+        <div class="find">
+          <div class="box"><textarea id="q" rows="2" placeholder="Ketik username, atau tempel Channel ID / tautan. Bisa masukkan beberapa sekaligus." aria-label="Channel ID, username atau tautan" role="combobox" aria-controls="sug" aria-autocomplete="list" aria-expanded="false" autocomplete="off"></textarea><div id="sug" class="sug" role="listbox" hidden></div></div>
+          <button class="primary" onclick="find()" data-i18n="btnFind">Cari</button>
+        </div>
+        <div class="h" data-i18n-html="urlHint">Buka aplikasi dengan <b>?id=UC…</b> di akhir tautan untuk melihat kreator secara langsung.</div>
+        <div id="out"></div>
+      </div>
+
+      <!-- TAB 2: OVERALL GMV PER MONTH -->
+      <div id="vGmv" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 data-i18n="gmvTitle">Total GMV Per Bulan</h2>
+            <div class="h" data-i18n="gmvSub">Pilih bulan untuk melihat total GMV, jumlah video, porsi kategori, dan kreator teratas.</div>
+          </div>
+          <button onclick="loadData(true)" data-i18n="btnRefreshData">Muat Ulang Data</button>
+        </div>
+        <div id="gOut"><div class="empty" data-i18n="loadingGmv">Memuat data GMV…</div></div>
+      </div>
+
+      <!-- TAB 3: UPLOAD CONTENT MONITORING -->
+      <div id="vUp" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 data-i18n="upTitle">Monitoring Upload Konten Kreator</h2>
+            <div class="h" data-i18n="upSub">Pantau jumlah unggahan video bulanan dan sorot kreator dengan upload &lt; 4 video atau tepat 4 video per bulan.</div>
+          </div>
+          <button onclick="loadData(true)" data-i18n="btnRefreshData">Muat Ulang Data</button>
+        </div>
+        <div id="uOut"><div class="empty" data-i18n="loadingUp">Memuat data unggahan…</div></div>
+      </div>
+
+      <!-- TAB 4: REVENUE -->
+      <div id="vRev" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 data-i18n="revTitle">Pendapatan</h2>
+            <div class="h" data-i18n="revSub">Pendapatan agensi dari setiap kreator berdasarkan persentase GMV mereka.</div>
+          </div>
+          <button onclick="loadData(true)" data-i18n="btnRefresh">Muat Ulang</button>
+        </div>
+        <div id="rOut"><div class="empty" data-i18n="loadingRev">Memuat data pendapatan…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzAMWCCkY1IeacKeoxs0ptNViHUmlRNT8SdbPmR3lwdq1-tRDvr3UTO2L4rmQwzayIx/exec';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function run(fn, arg) {
+  const url = new URL(API_URL);
+  if (fn === 'findChannels') {
+    url.searchParams.set('action', 'find');
+    url.searchParams.set('q', arg || '');
+  } else if (fn === 'getIndex') {
+    url.searchParams.set('action', 'index');
+  } else {
+    url.searchParams.set('action', 'revenue');
+  }
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+/* ----- DICTIONARY (ID DEFAULT, EN SECONDARY) ----- */
+const I18N = {
+  id: {
+    appTitle: 'Performa Kreator',
+    dashSub: 'Dashboard Langit Mediatama',
+    updatedAt: 'Diperbarui pukul',
+    lblLang: 'Bahasa',
+    lblCur: 'Mata Uang',
+    lblFx: 'Kurs (1 USD)',
+    fxCustom: 'Kustom',
+    btnApply: 'OK',
+    tabFind: 'Cari Kreator',
+    findSub: 'Cari performa penjualan GMV, pendapatan 5% ke agency, dan jumlah unggahan video per kreator.',
+    tabGmv: 'Total GMV',
+    tabUp: 'Monitoring Upload',
+    tabRev: 'Pendapatan',
+    searchPlaceholder: 'Ketik username, atau tempel Channel ID / tautan. Bisa masukkan beberapa sekaligus.',
+    btnFind: 'Cari',
+    urlHint: 'Buka aplikasi dengan <b>?id=UC…</b> di akhir tautan untuk melihat kreator secara langsung.',
+    gmvTitle: 'Total GMV Per Bulan',
+    gmvSub: 'Pilih bulan untuk melihat total GMV, jumlah video, porsi kategori, dan kreator teratas.',
+    upTitle: 'Monitoring Upload Konten Kreator',
+    upSub: 'Pantau jumlah unggahan video bulanan dan sorot kreator dengan upload < 4 video atau tepat 4 video per bulan.',
+    btnRefreshData: 'Muat Ulang Data',
+    btnRefresh: 'Muat Ulang',
+    loadingGmv: 'Memuat data GMV…',
+    loadingUp: 'Memuat data unggahan…',
+    loadingRev: 'Memuat data pendapatan…',
+    searching: 'Mencari…',
+    revTitle: 'Pendapatan',
+    revSub: 'Pendapatan agensi dari setiap kreator berdasarkan persentase GMV mereka.',
+    allMonthsYtd: 'Semua Bulan (YTD)',
+    allMonths: 'Semua Bulan',
+    ongoing: 'Berjalan',
+    ongoingNote: 'sedang berjalan. Angka bersifat sementara hingga akhir bulan.',
+    totalGmv: 'Total GMV',
+    overallGmvCard: 'GMV Keseluruhan',
+    ytdShareSub: '{p}% dari GMV YTD ({tot})',
+    allPeriodSub: 'Akumulasi seluruh bulan aktif',
+    agencyRevShort: 'Revenue Agency ({pc}%)',
+    agencyRevCol: 'Revenue Agency ({pc}%)',
+    videosUploaded: 'Video Diunggah',
+    perVideo: '/ video',
+    creatorsGenGmv: 'Kreator Menghasilkan GMV',
+    activeRate: 'tingkat aktif',
+    avgGmvCreator: 'Rata-rata GMV / Kreator Aktif',
+    samplePool: 'Pool sampel 1%',
+    firstTrackedMonth: 'Bulan pertama tercatat',
+    vsPrev: 'vs',
+    trendTitle: 'Tren GMV & Unggahan Bulanan',
+    clickBarHint: '(Klik batang grafik untuk ganti bulan)',
+    gmvByCat: 'GMV per Kategori',
+    noCatGmv: 'Belum ada GMV kategori pada periode ini.',
+    monthSummary: 'Ringkasan Bulanan',
+    clickRowHint: 'Klik baris untuk pindah bulan',
+    month: 'Bulan',
+    videos: 'Video',
+    creatorLeaderboard: 'Peringkat GMV Kreator',
+    filterCreators: 'Filter kreator...',
+    searchCreators: 'Cari kreator...',
+    creator: 'Kreator',
+    category: 'Kategori',
+    subscribers: 'Subscribers',
+    phone: 'No. HP',
+    copyBtn: 'Salin',
+    copiedBtn: 'Tersalin!',
+    share: 'Porsi',
+    gmvPerVid: 'GMV / Video',
+    noCreatorAct: 'Tidak ada aktivitas kreator untuk',
+    tipClickCreator: 'Tips: Klik baris kreator mana saja untuk membuka profil performa lengkapnya.',
+    backResults: 'Kembali ke hasil',
+    pageLink: 'Tautan halaman',
+    openChannel: 'Buka channel',
+    samplesBudget: 'Anggaran sampel (1%)',
+    samplesCol: 'Anggaran sampel (1%)',
+    prevCol: 'vs sebelumnya',
+    total: 'Total',
+    allCreators: 'Semua kreator',
+    selectCreator: 'Pilih kreator untuk membuka halaman detailnya.',
+    notFound: 'Tidak ditemukan',
+    checkId: 'Periksa kembali ID atau coba gunakan @username.',
+    nothingShow: 'Tidak ada data untuk ditampilkan.',
+    truncatedMsg: 'Menampilkan {n} hasil pertama. Gunakan kata kunci lebih spesifik.',
+    revCardLabel: 'Pendapatan ({pc}% dari GMV)',
+    creatorsGenRev: 'Kreator Menghasilkan Pendapatan',
+    avgPerRevCreator: 'Rata-rata per Kreator Berpendapatan',
+    onlyRevCreators: 'Hanya kreator dengan pendapatan',
+    noMatchFilter: 'Tidak ada kreator yang sesuai dengan filter.',
+    showingOf: 'Menampilkan {a} dari {b} kreator. Pendapatan adalah {pc}% dari GMV; kurs IDR Rp{fx} per USD.',
+    sampleFoot: 'Revenue agency adalah {pc}% dari GMV. Anggaran sampel adalah 1% dari GMV (kurs Rp{fx} per USD).',
+    provisionalFoot: ' Angka bulan {m} bersifat sementara hingga bulan berakhir.',
+    flagNoneYet: 'Belum ada unggahan maupun penjualan di bulan {m}.',
+    flagNonePast: 'Tidak ada unggahan dan tidak ada penjualan di bulan {m}.',
+    flagVidNoSaleYet: '{v} video diunggah di bulan {m}, namun belum ada penjualan.',
+    flagVidNoSalePast: '{v} video diunggah di bulan {m}, namun tidak ada penjualan.',
+    flagDrop: 'GMV turun {p}% dibandingkan bulan {pm}.',
+    noteCol: 'Catatan',
+    revTrendTitle: 'Tren Pendapatan Bulanan',
+
+    /* Upload Monitor Specific */
+    qAll: 'Semua Kreator',
+    qAllSub: 'Total kreator terdaftar',
+    qUnder4: 'Upload < 4 Video',
+    qUnder4Sub: 'Perlu perhatian (0–3 video/bln)',
+    qExact4: 'Upload Tepat 4 Video',
+    qExact4Sub: 'Batas minimum (4 video/bln)',
+    qOver4: 'Upload > 4 Video',
+    qOver4Sub: 'Target terlampaui (5+ video/bln)',
+    upTrendTitle: 'Tren Total Unggahan Video Bulanan',
+    upTableTitle: 'Daftar Monitoring Upload Kreator',
+    statusQuota: 'Status Kuota',
+    avgPerMonth: 'Rata-rata / Bln',
+    badgeUnder: 'Kurang (< 4)',
+    badgeExact: 'Tepat 4 Video',
+    badgeOver: 'Di Atas Target (> 4)',
+    ytdQuotaNote: 'Pada tampilan Semua Bulan (YTD), status dihitung berdasarkan rata-rata unggahan per bulan aktif ({n} bulan).'
+  },
+  en: {
+    appTitle: 'Creator Performance',
+    dashSub: 'Langit Mediatama Dashboard',
+    updatedAt: 'Updated at',
+    lblLang: 'Language',
+    lblCur: 'Currency',
+    lblFx: 'FX Rate (1 USD)',
+    fxCustom: 'Custom',
+    btnApply: 'OK',
+    tabFind: 'Creator Lookup',
+    findSub: 'Search GMV sales performance, 5% agency revenue, and video upload counts per creator.',
+    tabGmv: 'Overall GMV',
+    tabUp: 'Upload Monitor',
+    tabRev: 'Revenue',
+    searchPlaceholder: 'Type a username, or paste a channel ID or link. Add several to compare.',
+    btnFind: 'Find',
+    urlHint: 'Open the app with <b>?id=UC…</b> at the end of its link to look up a channel directly.',
+    gmvTitle: 'Overall GMV Per Month',
+    gmvSub: 'Switch between months to inspect total GMV, video output, category share, and top creators.',
+    upTitle: 'Creator Content Upload Monitor',
+    upSub: 'Track monthly video upload volume and highlight creators uploading < 4 videos or exactly 4 videos per month.',
+    btnRefreshData: 'Refresh Data',
+    btnRefresh: 'Refresh',
+    loadingGmv: 'Loading GMV data…',
+    loadingUp: 'Loading upload data…',
+    loadingRev: 'Loading revenue data…',
+    searching: 'Searching…',
+    revTitle: 'Revenue',
+    revSub: 'Our revenue from every creator, as a share of their GMV.',
+    allMonthsYtd: 'All Months (YTD)',
+    allMonths: 'All Months',
+    ongoing: 'Ongoing',
+    ongoingNote: 'is currently ongoing. Figures are provisional until the month ends.',
+    totalGmv: 'Total GMV',
+    overallGmvCard: 'Overall GMV',
+    ytdShareSub: '{p}% of YTD GMV ({tot})',
+    allPeriodSub: 'Accumulated across all tracked months',
+    agencyRevShort: 'Agency Revenue ({pc}%)',
+    agencyRevCol: 'Agency Rev ({pc}%)',
+    videosUploaded: 'Videos Uploaded',
+    perVideo: '/ video',
+    creatorsGenGmv: 'Creators Generating GMV',
+    activeRate: 'active rate',
+    avgGmvCreator: 'Avg GMV / Active Creator',
+    samplePool: '1% sample pool',
+    firstTrackedMonth: 'First tracked month',
+    vsPrev: 'vs',
+    trendTitle: 'Monthly GMV & Upload Trend',
+    clickBarHint: '(Click any bar to switch month)',
+    gmvByCat: 'GMV by Category',
+    noCatGmv: 'No category GMV recorded for this period.',
+    monthSummary: 'Month-by-Month Summary',
+    clickRowHint: 'Click row to switch',
+    month: 'Month',
+    videos: 'Videos',
+    creatorLeaderboard: 'Creator GMV Breakdown',
+    filterCreators: 'Filter creators...',
+    searchCreators: 'Search creators...',
+    creator: 'Creator',
+    category: 'Category',
+    subscribers: 'Subscribers',
+    phone: 'Phone',
+    copyBtn: 'Copy',
+    copiedBtn: 'Copied!',
+    share: 'Share',
+    gmvPerVid: 'GMV / Video',
+    noCreatorAct: 'No creator activity found for',
+    tipClickCreator: 'Tip: Click any creator row to open their full individual performance profile.',
+    backResults: 'Back to results',
+    pageLink: 'Page link',
+    openChannel: 'Open channel',
+    samplesBudget: 'Samples budget (1%)',
+    samplesCol: 'Samples budget (1%)',
+    prevCol: 'vs previous',
+    total: 'Total',
+    allCreators: 'All creators',
+    selectCreator: 'Select a creator to open their page.',
+    notFound: 'Not found',
+    checkId: 'Check the ID or try the @username.',
+    nothingShow: 'Nothing to show.',
+    truncatedMsg: 'Showing the first {n} matches. Use a longer search to narrow it down.',
+    revCardLabel: 'Revenue ({pc}% of GMV)',
+    creatorsGenRev: 'Creators generating revenue',
+    avgPerRevCreator: 'Average per revenue creator',
+    onlyRevCreators: 'Only creators with revenue',
+    noMatchFilter: 'No creators match these filters.',
+    showingOf: 'Showing {a} of {b} creators. Revenue is {pc}% of GMV; IDR uses Rp{fx} per USD.',
+    sampleFoot: 'Agency revenue is {pc}% of GMV. The samples budget is 1% of GMV (at Rp{fx} per USD).',
+    provisionalFoot: ' The {m} figures are provisional until the month ends.',
+    flagNoneYet: 'No uploads or sales yet in {m}.',
+    flagNonePast: 'No uploads and no sales in {m}.',
+    flagVidNoSaleYet: '{v} video(s) uploaded in {m}, but no sales yet.',
+    flagVidNoSalePast: '{v} video(s) uploaded in {m}, but no sales.',
+    flagDrop: 'GMV is down {p}% compared with {pm}.',
+    noteCol: 'Note',
+    revTrendTitle: 'Monthly Revenue Trend',
+
+    /* Upload Monitor Specific */
+    qAll: 'All Creators',
+    qAllSub: 'Total tracked creators',
+    qUnder4: 'Upload < 4 Videos',
+    qUnder4Sub: 'Needs attention (0–3 videos/mo)',
+    qExact4: 'Upload Exactly 4 Videos',
+    qExact4Sub: 'Minimum threshold (4 videos/mo)',
+    qOver4: 'Upload > 4 Videos',
+    qOver4Sub: 'Above target (5+ videos/mo)',
+    upTrendTitle: 'Monthly Total Video Upload Trend',
+    upTableTitle: 'Creator Upload Monitoring List',
+    statusQuota: 'Quota Status',
+    avgPerMonth: 'Avg / Month',
+    badgeUnder: 'Under (< 4)',
+    badgeExact: 'Exact 4 Videos',
+    badgeOver: 'Above Target (> 4)',
+    ytdQuotaNote: 'In All Months (YTD) view, quota status is evaluated by average monthly uploads across {n} tracked months.'
+  }
+};
+
+const MONTH_ID = {
+  January: 'Januari', February: 'Februari', March: 'Maret', April: 'April',
+  May: 'Mei', June: 'Juni', July: 'Juli', August: 'Agustus',
+  September: 'September', October: 'Oktober', November: 'November', December: 'Desember'
+};
+
+let S = {
+  lang: 'id', // Indonesian default
+  r: null,
+  cur: 'USD',
+  customFx: null, // User-overridden exchange rate (null = use spreadsheet FX)
+  tab: 'find',
+  rev: null,
+  creatorMonth: 'ALL',
+  gmvMonth: 'ALL',
+  upMonth: 'LATEST',
+  upFilter: 'ALL',
+  uq: '',
+  revMonth: 'ALL',
+  gq: '',
+  rsort: 'total',
+  rdir: -1,
+  rq: '',
+  ronly: true
+};
+let IDX = [], SG = {items:[], i:-1, s:0, e:0};
+
+const t = (k, vars) => {
+  let str = (I18N[S.lang] && I18N[S.lang][k]) || I18N.en[k] || k;
+  if (vars) Object.keys(vars).forEach(v => { str = str.replace(new RegExp('\\{' + v + '\\}', 'g'), vars[v]); });
+  return str;
+};
+const mName = m => S.lang === 'id' ? (MONTH_ID[m] || m) : m;
+const mShort = m => mName(m).slice(0, 3);
+const revRate = () => (S.r && S.r.rate != null) ? S.r.rate : ((S.rev && S.rev.rate != null) ? S.rev.rate : 0.05);
+
+/* Copy Phone Helper */
+const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+
+function copyPhone(btn, val) {
+  const done = () => {
+    btn.classList.add('copied');
+    btn.innerHTML = CHECK_ICON + '<span>' + esc(t('copiedBtn')) + '</span>';
+    clearTimeout(btn._tm);
+    btn._tm = setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = COPY_ICON + '<span>' + esc(t('copyBtn')) + '</span>';
+    }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(val).then(done).catch(() => fallbackCopy(val, done));
+  } else {
+    fallbackCopy(val, done);
+  }
+}
+
+function fallbackCopy(val, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = val;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  cb();
+}
+
+/* Exchange Rate Helpers */
+const baseFx = () => {
+  const x = S.rev || S.r;
+  return (x && x.fx) ? x.fx : 18000;
+};
+const activeFx = () => S.customFx || baseFx();
+
+function syncFxUI() {
+  const inp = $('fxInput');
+  if (document.activeElement !== inp) inp.value = activeFx();
+  const isCustom = S.customFx !== null && S.customFx !== baseFx();
+  $('fxBadge').classList.toggle('hidden', !isCustom);
+  $('fxReset').classList.toggle('hidden', !isCustom);
+}
+
+function rerenderAll() {
+  show();
+  gmvRender();
+  upRender();
+  revRender();
+}
+
+function applyFx() {
+  const val = Number($('fxInput').value);
+  if (val > 0) {
+    S.customFx = val;
+    syncFxUI();
+    rerenderAll();
+  }
+}
+
+function resetFx() {
+  S.customFx = null;
+  syncFxUI();
+  rerenderAll();
+}
+
+function toggleSidebar(open) {
+  $('sidebar').classList.toggle('open', open);
+  $('backdrop').classList.toggle('open', open);
+}
+
+function applyStaticLang() {
+  document.documentElement.lang = S.lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  $('q').placeholder = t('searchPlaceholder');
+  const src = S.r || S.rev;
+  if (src && src.updated) {
+    $('who').textContent = t('updatedAt') + ' ' + new Date(src.updated).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  } else {
+    $('who').textContent = t('dashSub');
+  }
+}
+
+function setLang(l) {
+  S.lang = l;
+  $('lID').classList.toggle('on', l === 'id');
+  $('lEN').classList.toggle('on', l === 'en');
+  applyStaticLang();
+  rerenderAll();
+}
+
+const rate = () => S.cur === 'IDR' ? activeFx() : 1;
+const loc = () => S.cur === 'IDR' ? 'id-ID' : 'en-US';
+const money = n => {
+  n = (n || 0) * rate();
+  return new Intl.NumberFormat(loc(), {
+    style: 'currency',
+    currency: S.cur,
+    maximumFractionDigits: S.cur === 'USD' && n !== 0 && Math.abs(n) < 10 ? 2 : 0
+  }).format(n);
+};
+const num = n => new Intl.NumberFormat('en-US').format(n || 0);
+const compact = n => new Intl.NumberFormat(loc(), {notation:'compact', maximumFractionDigits:1}).format(n);
+const idr = n => new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', maximumFractionDigits:0}).format(n || 0);
+const budget = g => (g || 0) * activeFx() * 0.01;
+const f1 = n => n.toFixed(1);
+
+function setTab(tab) {
+  S.tab = tab;
+  toggleSidebar(false);
+  $('tFind').classList.toggle('on', tab === 'find');
+  $('tGmv').classList.toggle('on', tab === 'gmv');
+  $('tUp').classList.toggle('on', tab === 'up');
+  $('tRev').classList.toggle('on', tab === 'rev');
+  $('vFind').classList.toggle('hidden', tab !== 'find');
+  $('vGmv').classList.toggle('hidden', tab !== 'gmv');
+  $('vUp').classList.toggle('hidden', tab !== 'up');
+  $('vRev').classList.toggle('hidden', tab !== 'rev');
+  if ((tab === 'gmv' || tab === 'up' || tab === 'rev') && !S.rev) loadData();
+}
+
+function setCur(c) {
+  S.cur = c;
+  $('cUSD').classList.toggle('on', c === 'USD');
+  $('cIDR').classList.toggle('on', c === 'IDR');
+  rerenderAll();
+}
+
+function niceStep(x) {
+  if (x <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(x))), n = x / p;
+  return [1, 2, 2.5, 5, 10].find(k => k >= n - 1e-9) * p;
+}
+
+/* ----- SHARED DATA LOADER (GMV, UPLOAD MONITOR & REVENUE) ----- */
+async function loadData(force) {
+  if (force || !S.rev) {
+    $('gOut').innerHTML = '<div class="empty">' + esc(t('loadingGmv')) + '</div>';
+    $('uOut').innerHTML = '<div class="empty">' + esc(t('loadingUp')) + '</div>';
+    $('rOut').innerHTML = '<div class="empty">' + esc(t('loadingRev')) + '</div>';
+    try {
+      S.rev = await run('getRevenue');
+      syncFxUI();
+      applyStaticLang();
+    } catch (e) {
+      const err = '<div class="miss">' + esc(e.message || e) + '</div>';
+      $('gOut').innerHTML = err;
+      $('uOut').innerHTML = err;
+      $('rOut').innerHTML = err;
+      return;
+    }
+  }
+  gmvRender();
+  upRender();
+  revRender();
+}
+
+/* ----- TAB 2: OVERALL GMV PER MONTH ----- */
+function setGmvMonth(m) {
+  S.gmvMonth = m;
+  gmvRender();
+}
+
+function overallChart(ms, gmvArr, vidArr, og, selectedMonth) {
+  const W = 680, H = 175, L = 54, R = 38, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
+  const gd = gmvArr.map(x => x * rate());
+  const gmax = niceStep(Math.max(0, ...gd) / 4) * 4;
+  const vmax = Math.max(4, Math.ceil(Math.max(0, ...vidArr) / 4) * 4);
+  let s = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - ph * k / 4;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + f1(y) + '" y2="' + f1(y) + '" class="gl"/>'
+      + '<text x="' + (L - 6) + '" y="' + f1(y + 3.5) + '" text-anchor="end" class="ax">' + compact(gmax * k / 4) + '</text>'
+      + '<text x="' + (W - R + 6) + '" y="' + f1(y + 3.5) + '" class="ax vx">' + num(vmax * k / 4) + '</text>';
+  }
+  const bw = Math.min(40, st * 0.54);
+  ms.forEach((m, i) => {
+    const cx = L + st * (i + 0.5), h = gd[i] / gmax * ph, isOg = m === og;
+    const isSel = selectedMonth === m;
+    const isDim = selectedMonth !== 'ALL' && !isSel;
+    const cls = 'bar' + (isOg ? ' og' : '') + (isSel ? ' sel' : '') + (isDim ? ' dim' : '');
+    s += '<rect style="cursor:pointer" onclick="setGmvMonth(\'' + m + '\')" x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - h) + '" width="' + f1(bw) + '" height="' + f1(h) + '" rx="2" class="' + cls + '"><title>'
+      + esc(mName(m) + ': ' + money(gmvArr[i]) + ' (' + num(vidArr[i]) + ' ' + t('videos').toLowerCase() + ')' + (isOg ? ' [' + t('ongoing') + ']' : '')) + '</title></rect>'
+      + '<text style="cursor:pointer;font-weight:' + (isSel ? '700' : '400') + '" onclick="setGmvMonth(\'' + m + '\')" x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(m) + '</text>'
+      + (isOg ? '<text x="' + f1(cx) + '" y="' + (H - B + 25) + '" text-anchor="middle" class="ax og-t">' + esc(t('ongoing')) + '</text>' : '');
+  });
+  const pts = vidArr.map((v, i) => [f1(L + st * (i + 0.5)), f1(T + ph - v / vmax * ph)]);
+  s += '<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" class="ln"/>'
+    + pts.map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" class="dot"/>').join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Overall GMV and Videos by Month" class="chart">' + s + '</svg>';
+}
+
+function gmvRender() {
+  const r = S.rev;
+  if (!r) return;
+  const wasFocused = document.activeElement && document.activeElement.id === 'gq';
+  const cursorPos = wasFocused ? document.activeElement.selectionStart : 0;
+
+  const a = r.months.indexOf(r.latest), b = r.ongoing ? r.months.indexOf(r.ongoing) : -1;
+  const ms = r.months.slice(0, Math.max(a, b) + 1);
+  const og = b > -1 ? r.ongoing : '';
+
+  if (S.gmvMonth !== 'ALL' && ms.indexOf(S.gmvMonth) === -1) S.gmvMonth = 'ALL';
+  const sel = S.gmvMonth;
+
+  const monthGmv = ms.map(m => r.creators.reduce((sum, c) => sum + (c.gmv[m] || 0), 0));
+  const monthVid = ms.map(m => r.creators.reduce((sum, c) => sum + ((c.videos && c.videos[m]) || 0), 0));
+
+  const activeMonths = sel === 'ALL' ? ms : [sel];
+  const periodGmv = activeMonths.reduce((s, m) => s + monthGmv[ms.indexOf(m)], 0);
+  const periodVid = activeMonths.reduce((s, m) => s + monthVid[ms.indexOf(m)], 0);
+
+  let momHtml = '';
+  if (sel !== 'ALL') {
+    const idx = ms.indexOf(sel);
+    if (idx > 0 && monthGmv[idx - 1] > 0) {
+      const diff = (monthGmv[idx] - monthGmv[idx - 1]) / monthGmv[idx - 1];
+      const sign = diff >= 0 ? '+' : '';
+      momHtml = '<small class="' + (diff >= 0 ? 'up' : 'down') + '">' + sign + Math.round(diff * 100) + '% ' + t('vsPrev') + ' ' + mShort(ms[idx - 1]) + '</small>';
+    } else {
+      momHtml = '<small class="none">' + esc(t('firstTrackedMonth')) + '</small>';
+    }
+  } else {
+    momHtml = '<small class="none">' + mShort(ms[0]) + ' – ' + mShort(ms[ms.length - 1]) + ' ' + r.year + '</small>';
+  }
+
+  const creatorRows = r.creators.map(c => {
+    const g = activeMonths.reduce((s, m) => s + (c.gmv[m] || 0), 0);
+    const v = activeMonths.reduce((s, m) => s + ((c.videos && c.videos[m]) || 0), 0);
+    return { id: c.id, name: c.name, category: c.category || 'Uncategorized', gmv: g, videos: v };
+  });
+
+  const activeCreators = creatorRows.filter(x => x.gmv > 0);
+  const avgPerCreator = activeCreators.length ? periodGmv / activeCreators.length : 0;
+
+  const catMap = {};
+  activeCreators.forEach(x => { catMap[x.category] = (catMap[x.category] || 0) + x.gmv; });
+  const catList = Object.keys(catMap).map(k => ({ name: k, gmv: catMap[k] })).sort((x, y) => y.gmv - x.gmv);
+
+  const qs = S.gq.toLowerCase();
+  const filteredCreators = creatorRows
+    .filter(x => (x.gmv > 0 || x.videos > 0) && (!qs || (x.name + ' ' + x.category + ' ' + x.id).toLowerCase().includes(qs)))
+    .sort((x, y) => y.gmv - x.gmv || y.videos - x.videos);
+
+  const pillsHtml = '<div class="m-switch" role="group" aria-label="Switch Month">'
+    + '<button class="m-pill' + (sel === 'ALL' ? ' on' : '') + '" onclick="setGmvMonth(\'ALL\')">' + esc(t('allMonthsYtd')) + '</button>'
+    + ms.map(m => '<button class="m-pill' + (sel === m ? ' on' : '') + '" onclick="setGmvMonth(\'' + m + '\')">'
+      + esc(mName(m)) + (m === og ? '<span class="dot-og" title="' + esc(t('ongoing')) + '"></span>' : '')
+      + '</button>').join('')
+    + '</div>';
+
+  const periodLabel = sel === 'ALL' ? t('allMonths') + ' (' + r.year + ')' : mName(sel) + ' ' + r.year + (sel === og ? ' (' + t('ongoing') + ')' : '');
+
+  $('gOut').innerHTML = pillsHtml
+    + (sel === og ? '<div class="miss">' + esc(mName(og)) + ' ' + esc(t('ongoingNote')) + '</div>' : '')
+    + '<div class="stats rev-stats">'
+    + '<div class="stat"><b>' + money(periodGmv) + '</b><span>' + esc(t('totalGmv')) + ' — ' + esc(periodLabel) + '</span>' + momHtml + '</div>'
+    + '<div class="stat"><b>' + num(periodVid) + '</b><span>' + esc(t('videosUploaded')) + '</span><small class="none">' + (periodVid && periodGmv ? money(periodGmv / periodVid) + ' ' + esc(t('perVideo')) : '—') + '</small></div>'
+    + '<div class="stat"><b>' + activeCreators.length + ' / ' + r.creators.length + '</b><span>' + esc(t('creatorsGenGmv')) + '</span><small class="none">' + (r.creators.length ? Math.round(activeCreators.length / r.creators.length * 100) : 0) + '% ' + esc(t('activeRate')) + '</small></div>'
+    + '<div class="stat"><b>' + (activeCreators.length ? money(avgPerCreator) : '—') + '</b><span>' + esc(t('avgGmvCreator')) + '</span><small class="none">' + esc(t('samplePool')) + ': ' + idr(budget(periodGmv)) + '</small></div>'
+    + '</div>'
+
+    + '<div class="card">'
+    + '<div class="top"><span class="card-title" style="margin:0">' + esc(t('trendTitle')) + ' <span class="h" style="font-weight:400;margin-left:8px">' + esc(t('clickBarHint')) + '</span></span></div>'
+    + '<div class="legend"><span><i style="background:var(--accent)"></i>GMV (' + S.cur + ')</span><span><i style="background:var(--vid)"></i>' + esc(t('videosUploaded')) + '</span></div>'
+    + '<div class="chartbox">' + overallChart(ms, monthGmv, monthVid, og, sel) + '</div>'
+    + '</div>'
+
+    + '<div class="grid-2">'
+    + '<div class="card card-pad">'
+    + '<div class="card-title"><span>' + esc(t('gmvByCat')) + '</span><span class="h">' + esc(periodLabel) + '</span></div>'
+    + (catList.length
+        ? catList.map(c => {
+            const pct = periodGmv > 0 ? (c.gmv / periodGmv * 100) : 0;
+            return '<div class="cat-row">'
+              + '<div class="cat-hdr"><span><b>' + esc(c.name) + '</b> <span class="h">(' + pct.toFixed(1) + '%)</span></span><span><b>' + money(c.gmv) + '</b></span></div>'
+              + '<div class="cat-track"><div class="cat-fill" style="width:' + Math.max(2, pct).toFixed(1) + '%"></div></div>'
+              + '</div>';
+          }).join('')
+        : '<div class="empty">' + esc(t('noCatGmv')) + '</div>')
+    + '</div>'
+
+    + '<div class="card">'
+    + '<div class="card-pad" style="padding-bottom:8px"><div class="card-title" style="margin:0"><span>' + esc(t('monthSummary')) + '</span><span class="h">' + esc(t('clickRowHint')) + '</span></div></div>'
+    + '<div class="scroll"><table style="min-width:100%"><thead><tr><th>' + esc(t('month')) + '</th><th>GMV</th><th>' + esc(t('videos')) + '</th><th>MoM</th></tr></thead><tbody>'
+    + ms.map((m, i) => {
+        const g = monthGmv[i], v = monthVid[i], pg = i > 0 ? monthGmv[i - 1] : 0;
+        const d = pg > 0 && m !== og ? (g - pg) / pg : null;
+        const isSel = sel === m;
+        return '<tr class="link" style="' + (isSel ? 'background:#fdf2f2;font-weight:700' : '') + '" onclick="setGmvMonth(\'' + m + '\')">'
+          + '<td>' + esc(mName(m)) + (m === og ? '<span class="pill">' + esc(t('ongoing')) + '</span>' : '') + '</td>'
+          + '<td>' + money(g) + '</td>'
+          + '<td>' + num(v) + '</td>'
+          + '<td class="' + (d == null ? 'none' : d >= 0 ? 'up' : 'down') + '">' + (d == null ? '—' : (d >= 0 ? '+' : '') + Math.round(d * 100) + '%') + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>'
+    + '</div>'
+    + '</div>'
+
+    + '<div class="card">'
+    + '<div class="top" style="padding-bottom:12px">'
+    + '<span class="card-title" style="margin:0">' + esc(t('creatorLeaderboard')) + ' — ' + esc(periodLabel) + '</span>'
+    + '<input id="gq" value="' + esc(S.gq) + '" oninput="S.gq=this.value;gmvRender()" placeholder="' + esc(t('filterCreators')) + '" aria-label="Filter creators">'
+    + '</div>'
+    + (filteredCreators.length
+        ? '<div class="scroll"><table><thead><tr><th>#</th><th>' + esc(t('creator')) + '</th><th>' + esc(t('category')) + '</th><th>GMV</th><th>' + esc(t('share')) + '</th><th>' + esc(t('videos')) + '</th><th>' + esc(t('gmvPerVid')) + '</th></tr></thead><tbody>'
+          + filteredCreators.map((c, idx) => {
+              const share = periodGmv > 0 ? (c.gmv / periodGmv * 100) : 0;
+              return '<tr class="link" onclick="inspectCreator(\'' + esc(c.id) + '\')">'
+                + '<td>' + (idx + 1) + '</td>'
+                + '<td style="text-align:left"><b>' + esc(c.name) + '</b></td>'
+                + '<td style="text-align:left">' + esc(c.category) + '</td>'
+                + '<td class="gmv" style="--w:' + Math.round(c.gmv / Math.max(1, filteredCreators[0].gmv) * 100) + '%">' + money(c.gmv) + '</td>'
+                + '<td>' + share.toFixed(1) + '%</td>'
+                + '<td>' + num(c.videos) + '</td>'
+                + '<td>' + (c.videos && c.gmv ? money(c.gmv / c.videos) : '—') + '</td>'
+                + '</tr>';
+            }).join('')
+          + '</tbody></table></div>'
+        : '<div class="empty">' + esc(t('noCreatorAct')) + ' ' + esc(periodLabel) + '.</div>')
+    + '<div class="foot">' + esc(t('tipClickCreator')) + '</div>'
+    + '</div>';
+
+  if (wasFocused) {
+    const inp = $('gq');
+    if (inp) { inp.focus(); inp.setSelectionRange(cursorPos, cursorPos); }
+  }
+}
+
+/* ----- TAB 3: UPLOAD CONTENT MONITORING ----- */
+function setUpMonth(m) {
+  S.upMonth = m;
+  upRender();
+}
+
+function setUpFilter(f) {
+  S.upFilter = f;
+  upRender();
+}
+
+function uploadChart(ms, vidArr, og, selectedMonth) {
+  const W = 680, H = 155, L = 46, R = 14, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
+  const vmax = niceStep(Math.max(4, ...vidArr) / 4) * 4;
+  let s = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - ph * k / 4;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + f1(y) + '" y2="' + f1(y) + '" class="gl"/>'
+      + '<text x="' + (L - 6) + '" y="' + f1(y + 3.5) + '" text-anchor="end" class="ax">' + num(vmax * k / 4) + '</text>';
+  }
+  const bw = Math.min(46, st * 0.54);
+  ms.forEach((m, i) => {
+    const cx = L + st * (i + 0.5), h = vidArr[i] / vmax * ph, isOg = m === og;
+    const isSel = selectedMonth === m;
+    const isDim = selectedMonth !== 'ALL' && !isSel;
+    const cls = 'bar' + (isOg ? ' og' : '') + (isSel ? ' sel' : '') + (isDim ? ' dim' : '');
+    s += '<rect style="cursor:pointer" onclick="setUpMonth(\'' + m + '\')" x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - h) + '" width="' + f1(bw) + '" height="' + f1(h) + '" rx="2" class="' + cls + '"><title>'
+      + esc(mName(m) + ': ' + num(vidArr[i]) + ' ' + t('videos').toLowerCase() + (isOg ? ' (' + t('ongoing') + ')' : '')) + '</title></rect>'
+      + '<text style="cursor:pointer;font-weight:' + (isSel ? '700' : '400') + '" onclick="setUpMonth(\'' + m + '\')" x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(m) + '</text>'
+      + (isOg ? '<text x="' + f1(cx) + '" y="' + (H - B + 25) + '" text-anchor="middle" class="ax og-t">' + esc(t('ongoing')) + '</text>' : '');
+  });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Monthly Video Uploads" class="chart">' + s + '</svg>';
+}
+
+function upRender() {
+  const r = S.rev;
+  if (!r) return;
+  const wasFocused = document.activeElement && document.activeElement.id === 'uq';
+  const cursorPos = wasFocused ? document.activeElement.selectionStart : 0;
+
+  const a = r.months.indexOf(r.latest), b = r.ongoing ? r.months.indexOf(r.ongoing) : -1;
+  const ms = r.months.slice(0, Math.max(a, b) + 1);
+  const og = b > -1 ? r.ongoing : '';
+
+  if (S.upMonth === 'LATEST' || (S.upMonth !== 'ALL' && ms.indexOf(S.upMonth) === -1)) {
+    S.upMonth = ms[ms.length - 1] || 'ALL';
+  }
+  const sel = S.upMonth;
+  const activeMs = sel === 'ALL' ? ms : [sel];
+  const monthVid = ms.map(m => r.creators.reduce((sum, c) => sum + ((c.videos && c.videos[m]) || 0), 0));
+
+  const rows = r.creators.map(c => {
+    const totalVid = activeMs.reduce((s, m) => s + ((c.videos && c.videos[m]) || 0), 0);
+    const totalGmv = activeMs.reduce((s, m) => s + (c.gmv[m] || 0), 0);
+    const avgVid = totalVid / activeMs.length;
+    const metric = sel === 'ALL' ? avgVid : totalVid;
+
+    let status = 'OVER4';
+    if (metric < 4) status = 'UNDER4';
+    else if (metric === 4) status = 'EXACT4';
+
+    return {
+      id: c.id,
+      name: c.name,
+      category: c.category || '—',
+      videos: totalVid,
+      avgVid: avgVid,
+      gmv: totalGmv,
+      status: status
+    };
+  });
+
+  const cAll = rows.length;
+  const cUnder = rows.filter(x => x.status === 'UNDER4').length;
+  const cExact = rows.filter(x => x.status === 'EXACT4').length;
+  const cOver = rows.filter(x => x.status === 'OVER4').length;
+
+  const qs = S.uq.toLowerCase();
+  const filtered = rows
+    .filter(x => (S.upFilter === 'ALL' || x.status === S.upFilter) && (!qs || (x.name + ' ' + x.category + ' ' + x.id).toLowerCase().includes(qs)))
+    .sort((x, y) => x.videos - y.videos || x.name.localeCompare(y.name));
+
+  const pillsHtml = '<div class="m-switch" role="group" aria-label="Switch Upload Month">'
+    + '<button class="m-pill' + (sel === 'ALL' ? ' on' : '') + '" onclick="setUpMonth(\'ALL\')">' + esc(t('allMonthsYtd')) + '</button>'
+    + ms.map(m => '<button class="m-pill' + (sel === m ? ' on' : '') + '" onclick="setUpMonth(\'' + m + '\')">'
+      + esc(mName(m)) + (m === og ? '<span class="dot-og" title="' + esc(t('ongoing')) + '"></span>' : '')
+      + '</button>').join('')
+    + '</div>';
+
+  const quotaMenuHtml = '<div class="quota-bar" role="group" aria-label="Filter Upload Quota">'
+    + '<button class="q-card' + (S.upFilter === 'ALL' ? ' on' : '') + '" onclick="setUpFilter(\'ALL\')">'
+    + '<div class="q-top"><span>' + esc(t('qAll')) + '</span><span>100%</span></div>'
+    + '<b>' + num(cAll) + '</b><small>' + esc(t('qAllSub')) + '</small></button>'
+
+    + '<button class="q-card warn-under' + (S.upFilter === 'UNDER4' ? ' on' : '') + '" onclick="setUpFilter(\'UNDER4\')">'
+    + '<div class="q-top"><span style="color:var(--down)">● ' + esc(t('qUnder4')) + '</span><span>' + (cAll ? Math.round(cUnder / cAll * 100) : 0) + '%</span></div>'
+    + '<b style="color:var(--down)">' + num(cUnder) + '</b><small>' + esc(t('qUnder4Sub')) + '</small></button>'
+
+    + '<button class="q-card warn-exact' + (S.upFilter === 'EXACT4' ? ' on' : '') + '" onclick="setUpFilter(\'EXACT4\')">'
+    + '<div class="q-top"><span style="color:var(--warn)">● ' + esc(t('qExact4')) + '</span><span>' + (cAll ? Math.round(cExact / cAll * 100) : 0) + '%</span></div>'
+    + '<b style="color:var(--warn)">' + num(cExact) + '</b><small>' + esc(t('qExact4Sub')) + '</small></button>'
+
+    + '<button class="q-card warn-over' + (S.upFilter === 'OVER4' ? ' on' : '') + '" onclick="setUpFilter(\'OVER4\')">'
+    + '<div class="q-top"><span style="color:var(--up)">● ' + esc(t('qOver4')) + '</span><span>' + (cAll ? Math.round(cOver / cAll * 100) : 0) + '%</span></div>'
+    + '<b style="color:var(--up)">' + num(cOver) + '</b><small>' + esc(t('qOver4Sub')) + '</small></button>'
+    + '</div>';
+
+  const periodLabel = sel === 'ALL' ? t('allMonths') + ' (' + r.year + ')' : mName(sel) + ' ' + r.year + (sel === og ? ' (' + t('ongoing') + ')' : '');
+
+  $('uOut').innerHTML = pillsHtml
+    + (sel === og ? '<div class="miss">' + esc(mName(og)) + ' ' + esc(t('ongoingNote')) + '</div>' : '')
+    + (sel === 'ALL' ? '<div class="h" style="margin-bottom:8px">' + esc(t('ytdQuotaNote', { n: ms.length })) + '</div>' : '')
+    + quotaMenuHtml
+
+    + '<div class="card">'
+    + '<div class="top"><span class="card-title" style="margin:0">' + esc(t('upTrendTitle')) + ' <span class="h" style="font-weight:400;margin-left:8px">' + esc(t('clickBarHint')) + '</span></span></div>'
+    + '<div class="chartbox">' + uploadChart(ms, monthVid, og, sel) + '</div>'
+    + '</div>'
+
+    + '<div class="card">'
+    + '<div class="top" style="padding-bottom:12px">'
+    + '<span class="card-title" style="margin:0">' + esc(t('upTableTitle')) + ' — ' + esc(periodLabel) + '</span>'
+    + '<input id="uq" value="' + esc(S.uq) + '" oninput="S.uq=this.value;upRender()" placeholder="' + esc(t('filterCreators')) + '" aria-label="Filter creators">'
+    + '</div>'
+    + (filtered.length
+        ? '<div class="scroll"><table><thead><tr>'
+          + '<th>' + esc(t('creator')) + '</th>'
+          + '<th>' + esc(t('category')) + '</th>'
+          + '<th>' + esc(t('videosUploaded')) + '</th>'
+          + (sel === 'ALL' ? '<th>' + esc(t('avgPerMonth')) + '</th>' : '')
+          + '<th>' + esc(t('statusQuota')) + '</th>'
+          + '<th>GMV</th>'
+          + '</tr></thead><tbody>'
+          + filtered.map(c => {
+              const rowCls = c.status === 'UNDER4' ? 'link hl-under' : c.status === 'EXACT4' ? 'link hl-exact' : 'link';
+              const badgeHtml = c.status === 'UNDER4'
+                ? '<span class="badge badge-under">' + esc(t('badgeUnder')) + '</span>'
+                : c.status === 'EXACT4'
+                  ? '<span class="badge badge-exact">' + esc(t('badgeExact')) + '</span>'
+                  : '<span class="badge badge-over">' + esc(t('badgeOver')) + '</span>';
+              return '<tr class="' + rowCls + '" onclick="inspectCreator(\'' + esc(c.id) + '\')">'
+                + '<td><b>' + esc(c.name) + '</b></td>'
+                + '<td style="text-align:left">' + esc(c.category) + '</td>'
+                + '<td><b>' + num(c.videos) + '</b></td>'
+                + (sel === 'ALL' ? '<td>' + c.avgVid.toFixed(1) + '</td>' : '')
+                + '<td>' + badgeHtml + '</td>'
+                + '<td>' + money(c.gmv) + '</td>'
+                + '</tr>';
+            }).join('')
+          + '</tbody></table></div>'
+        : '<div class="empty">' + esc(t('noMatchFilter')) + '</div>')
+    + '<div class="foot">' + esc(t('tipClickCreator')) + '</div>'
+    + '</div>';
+
+  if (wasFocused) {
+    const inp = $('uq');
+    if (inp) { inp.focus(); inp.setSelectionRange(cursorPos, cursorPos); }
+  }
+}
+
+function inspectCreator(id) {
+  setTab('find');
+  $('q').value = id;
+  find(id);
+  window.scrollTo(0, 0);
+}
+
+/* ----- TAB 1: CREATOR LOOKUP ----- */
+function setCreatorMonth(m) {
+  S.creatorMonth = m;
+  show();
+}
+
+async function find(text) {
+  text = typeof text === 'string' ? text : $('q').value;
+  if (!text.trim()) return;
+  SG.items = []; drawSug();
+  $('out').innerHTML = '<div class="empty">' + esc(t('searching')) + '</div>';
+  try {
+    S.r = await run('findChannels', text);
+    S.open = null;
+    S.creatorMonth = 'ALL';
+    syncFxUI();
+    applyStaticLang();
+    show();
+  } catch (e) {
+    $('out').innerHTML = '<div class="miss">' + esc(e.message || e) + '</div>';
+  }
+}
+
+function shown() {
+  const r = S.r, a = r.months.indexOf(r.latest), b = r.ongoing ? r.months.indexOf(r.ongoing) : -1;
+  return r.months.slice(0, Math.max(a, b) + 1);
+}
+
+function flag(c) {
+  const r = S.r, L = r.latest, ms = r.months, i = ms.indexOf(L), og = L === r.ongoing;
+  if (!L) return '';
+  const g = c.gmv[L], v = c.videos[L], pg = i > 0 ? c.gmv[ms[i - 1]] : 0;
+  if (!g && !v) return t(og ? 'flagNoneYet' : 'flagNonePast', { m: mName(L) });
+  if (v && !g) return t(og ? 'flagVidNoSaleYet' : 'flagVidNoSalePast', { v: v, m: mName(L) });
+  if (!og && pg > 0 && g < pg * 0.7) return t('flagDrop', { p: Math.round((1 - g / pg) * 100), pm: mName(ms[i - 1]) });
+  return '';
+}
+
+function chart(c, ms, selectedMonth) {
+  const r = S.r, W = 640, H = 175, L = 52, R = 38, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
+  const gv = ms.map(m => c.gmv[m]), vv = ms.map(m => c.videos[m]), gd = gv.map(x => x * rate());
+  const gmax = niceStep(Math.max(0, ...gd) / 4) * 4;
+  const vmax = Math.max(4, Math.ceil(Math.max(0, ...vv) / 4) * 4);
+  const rt = revRate(), pc = Math.round(rt * 100);
+  let s = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - ph * k / 4;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + f1(y) + '" y2="' + f1(y) + '" class="gl"/>'
+      + '<text x="' + (L - 6) + '" y="' + f1(y + 3.5) + '" text-anchor="end" class="ax">' + compact(gmax * k / 4) + '</text>'
+      + '<text x="' + (W - R + 6) + '" y="' + f1(y + 3.5) + '" class="ax vx">' + (vmax * k / 4) + '</text>';
+  }
+  const bw = Math.min(40, st * 0.54);
+  ms.forEach((m, i) => {
+    const cx = L + st * (i + 0.5), h = gd[i] / gmax * ph, og = m === r.ongoing;
+    const isSel = selectedMonth === m;
+    const isDim = selectedMonth !== 'ALL' && !isSel;
+    const cls = 'bar' + (og ? ' og' : '') + (isSel ? ' sel' : '') + (isDim ? ' dim' : '');
+    s += '<rect style="cursor:pointer" onclick="setCreatorMonth(\'' + m + '\')" x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - h) + '" width="' + f1(bw) + '" height="' + f1(h) + '" rx="2" class="' + cls + '"><title>'
+      + esc(mName(m) + ': GMV ' + money(gv[i]) + ' | Rev ' + pc + '% ' + money(gv[i] * rt) + ' | ' + vv[i] + ' ' + t('videos').toLowerCase() + (og ? ' (' + t('ongoing') + ')' : '')) + '</title></rect>'
+      + '<text style="cursor:pointer;font-weight:' + (isSel ? '700' : '400') + '" onclick="setCreatorMonth(\'' + m + '\')" x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(m) + '</text>'
+      + (og ? '<text x="' + f1(cx) + '" y="' + (H - B + 25) + '" text-anchor="middle" class="ax og-t">' + esc(t('ongoing')) + '</text>' : '');
+  });
+  const pts = vv.map((v, i) => [f1(L + st * (i + 0.5)), f1(T + ph - v / vmax * ph)]);
+  s += '<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" class="ln"/>'
+    + pts.map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" class="dot"/>').join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="GMV and uploaded videos by month" class="chart">' + s + '</svg>';
+}
+
+function avatarUrl(raw) {
+  const u = String(raw || '').trim();
+  if (!/^https?:\/\//i.test(u)) return '';
+  const dm = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([\w-]+)/i);
+  return dm ? 'https://drive.google.com/thumbnail?id=' + dm[1] + '&sz=w200' : u;
+}
+
+function avatarHtml(c, small) {
+  const src = avatarUrl(c.avatar);
+  const initial = esc((c.name || '?').replace(/^@/, '').charAt(0).toUpperCase());
+  const imgCls = small ? 'avatar-sm' : 'avatar';
+  const fbCls = small ? 'avatar-sm-fb' : 'avatar-fb';
+  if (!src) return '<span class="' + fbCls + '" aria-hidden="true">' + initial + '</span>';
+  return '<img src="' + esc(src) + '" alt="' + esc(c.name) + '" class="' + imgCls + '" referrerpolicy="no-referrer" onerror="this.outerHTML=\'<span class=&quot;' + fbCls + '&quot; aria-hidden=&quot;true&quot;>' + initial + '</span>\'">';
+}
+
+function phoneHtml(phone) {
+  if (!phone) return '';
+  return '<span>' + esc(t('phone')) + ': <b>' + esc(phone) + '</b>'
+    + '<button type="button" class="copy-pill" onclick="event.stopPropagation();copyPhone(this,\'' + esc(phone) + '\')" title="' + esc(t('copyBtn')) + '">'
+    + COPY_ICON + '<span>' + esc(t('copyBtn')) + '</span></button></span>';
+}
+
+function page(c) {
+  const r = S.r, ms = shown(), og = r.ongoing && ms.indexOf(r.ongoing) > -1 ? r.ongoing : '';
+  if (S.creatorMonth !== 'ALL' && ms.indexOf(S.creatorMonth) === -1) S.creatorMonth = 'ALL';
+  const sel = S.creatorMonth;
+  const activeMs = sel === 'ALL' ? ms : [sel];
+
+  const rt = revRate(), pc = Math.round(rt * 100);
+  const tg = activeMs.reduce((a, m) => a + c.gmv[m], 0);
+  const trev = tg * rt;
+  const tv = activeMs.reduce((a, m) => a + c.videos[m], 0);
+  const max = Math.max(1, ...ms.map(m => c.gmv[m]));
+  const f = flag(c);
+  const safeUrl = /^https:\/\/(www\.)?youtube\.com\//.test(c.url) ? c.url : '';
+  const facts = [
+      ['Channel ID', c.id],
+      [t('subscribers'), c.subscribers || '—'],
+      [t('category'), c.category || '—'],
+      ['Type', c.type],
+      ['Status', c.status],
+      ['Enrolled', c.enrolled]
+    ]
+    .filter(x => x[1]).map(x => '<span>' + esc(x[0]) + ': <b>' + esc(x[1]) + '</b></span>').join('')
+    + phoneHtml(c.phone)
+    + (safeUrl ? '<a href="' + esc(safeUrl) + '" target="_blank" rel="noopener">' + esc(t('openChannel')) + '</a>' : '');
+
+  const pillsHtml = '<div class="m-switch in-card" role="group" aria-label="Switch Creator Month">'
+    + '<button class="m-pill' + (sel === 'ALL' ? ' on' : '') + '" onclick="setCreatorMonth(\'ALL\')">' + esc(t('allMonthsYtd')) + '</button>'
+    + ms.map(m => '<button class="m-pill' + (sel === m ? ' on' : '') + '" onclick="setCreatorMonth(\'' + m + '\')">'
+      + esc(mName(m)) + (m === og ? '<span class="dot-og" title="' + esc(t('ongoing')) + '"></span>' : '')
+      + '</button>').join('')
+    + '</div>';
+
+  const periodSpan = sel === 'ALL' ? (mShort(ms[0]) + ' – ' + mShort(ms[ms.length - 1])) : (mName(sel) + ' ' + r.year);
+  const shareBase = window.location.origin + window.location.pathname;
+
+  return '<div class="card">'
+    + (r.results.length > 1 ? '<div class="top"><button data-back>' + esc(t('backResults')) + '</button></div>' : '')
+    + '<div class="top"><div class="creator-head">' + avatarHtml(c, false) + '<span class="big">' + esc(c.name) + '</span></div></div>'
+    + '<div class="facts">' + facts + '</div>'
+    + '<div class="share">' + esc(t('pageLink')) + ' <input readonly value="' + esc(shareBase + '?id=' + c.id) + '" onfocus="this.select()" aria-label="Link to this creator page"></div>'
+    + pillsHtml
+    + ((sel === 'ALL' ? og : (sel === og ? og : '')) ? '<div class="note" style="margin-top:12px">' + esc(mName(og)) + ' ' + esc(t('ongoingNote')) + '</div>' : '')
+    + (f ? '<div class="flag" style="margin-top:12px">' + esc(f) + '</div>' : '')
+    + '<div class="stats cols-5">'
+    + '<div class="stat"><b>' + money(tg) + '</b><span>GMV (' + esc(periodSpan) + ')</span></div>'
+    + '<div class="stat"><b class="rev-val">' + money(trev) + '</b><span>' + esc(t('agencyRevShort', { pc: pc })) + '</span></div>'
+    + '<div class="stat"><b>' + num(tv) + '</b><span>' + esc(t('videosUploaded')) + '</span></div>'
+    + '<div class="stat"><b>' + (tv && tg ? money(tg / tv) : '—') + '</b><span>' + esc(t('gmvPerVid')) + '</span></div>'
+    + '<div class="stat"><b>' + idr(budget(tg)) + '</b><span>' + esc(t('samplesBudget')) + '</span></div></div>'
+    + '<div class="legend"><span><i style="background:var(--accent)"></i>GMV</span><span><i style="background:var(--vid)"></i>' + esc(t('videosUploaded')) + '</span><span class="h" style="margin-left:auto">' + esc(t('clickBarHint')) + '</span></div>'
+    + '<div class="chartbox">' + chart(c, ms, sel) + '</div>'
+    + '<div class="scroll"><table><thead><tr>'
+    + '<th>' + esc(t('month')) + '</th>'
+    + '<th>GMV</th>'
+    + '<th>' + esc(t('agencyRevCol', { pc: pc })) + '</th>'
+    + '<th>' + esc(t('videos')) + '</th>'
+    + '<th>' + esc(t('gmvPerVid')) + '</th>'
+    + '<th>' + esc(t('prevCol')) + '</th>'
+    + '<th>' + esc(t('samplesCol')) + '</th>'
+    + '</tr></thead><tbody>'
+    + activeMs.map(m => {
+        const i = ms.indexOf(m);
+        const g = c.gmv[m], rev = g * rt, v = c.videos[m], pg = i > 0 ? c.gmv[ms[i - 1]] : 0, o = m === og;
+        const d = pg > 0 && !o ? (g - pg) / pg : null;
+        return '<tr class="link" onclick="setCreatorMonth(\'' + (sel === m ? 'ALL' : m) + '\')">'
+          + '<td>' + esc(mName(m)) + ' ' + r.year + (o ? '<span class="pill">' + esc(t('ongoing')) + '</span>' : '') + '</td>'
+          + '<td class="gmv" style="--w:' + Math.round(g / max * 100) + '%">' + money(g) + '</td>'
+          + '<td class="rev-cell">' + money(rev) + '</td>'
+          + '<td>' + num(v) + '</td>'
+          + '<td>' + (v && g ? money(g / v) : '—') + '</td>'
+          + '<td class="' + (d == null ? 'none' : d >= 0 ? 'up' : 'down') + '">' + (d == null ? '—' : (d >= 0 ? '+' : '') + Math.round(d * 100) + '%') + '</td>'
+          + '<td>' + idr(budget(g)) + '</td></tr>';
+      }).join('')
+    + (activeMs.length > 1
+        ? '<tr class="tot"><td>' + esc(t('total')) + '</td><td>' + money(tg) + '</td><td class="rev-cell">' + money(trev) + '</td><td>' + num(tv) + '</td><td>' + (tv && tg ? money(tg / tv) : '—') + '</td><td></td><td>' + idr(budget(tg)) + '</td></tr>'
+        : '')
+    + '</tbody></table></div>'
+    + '<div class="foot">' + esc(t('sampleFoot', { pc: pc, fx: new Intl.NumberFormat('id-ID').format(activeFx()) }))
+    + (og ? esc(t('provisionalFoot', { m: mName(og) })) : '') + '</div></div>';
+}
+
+function listView(r) {
+  const L = r.latest, og = L === r.ongoing, rt = revRate(), pc = Math.round(rt * 100);
+  return '<div class="card scroll"><table class="lt"><thead><tr>'
+    + '<th>' + esc(t('creator')) + '</th>'
+    + '<th>' + esc(t('subscribers')) + '</th>'
+    + '<th>' + esc(t('phone')) + '</th>'
+    + '<th>' + esc(t('category')) + '</th>'
+    + '<th>GMV, ' + mShort(L) + (og ? ' (' + esc(t('ongoing')) + ')' : '') + '</th>'
+    + '<th>' + esc(t('agencyRevCol', { pc: pc })) + '</th>'
+    + '<th>' + esc(t('videos')) + '</th>'
+    + '<th>' + esc(t('noteCol')) + '</th>'
+    + '</tr></thead><tbody>'
+    + r.results.map(c => '<tr class="link" data-open="' + esc(c.id) + '">'
+      + '<td><div style="display:flex;align-items:center">' + avatarHtml(c, true) + '<span>' + esc(c.name) + '</span></div></td>'
+      + '<td>' + (esc(c.subscribers) || '—') + '</td>'
+      + '<td style="text-align:left">' + (c.phone
+          ? '<span>' + esc(c.phone) + '</span><button type="button" class="copy-pill" onclick="event.stopPropagation();copyPhone(this,\'' + esc(c.phone) + '\')" title="' + esc(t('copyBtn')) + '">' + COPY_ICON + '</button>'
+          : '—') + '</td>'
+      + '<td>' + (esc(c.category) || '—') + '</td>'
+      + '<td>' + money(c.gmv[L]) + '</td>'
+      + '<td class="rev-cell">' + money((c.gmv[L] || 0) * rt) + '</td>'
+      + '<td>' + num(c.videos[L]) + '</td>'
+      + '<td>' + esc(flag(c)) + '</td></tr>').join('')
+    + '</tbody></table></div><div class="h">' + esc(t('selectCreator')) + '</div>';
+}
+
+function show() {
+  const r = S.r;
+  if (!r) return;
+  let h = '';
+  if (r.notFound.length) h += '<div class="miss">' + esc(t('notFound')) + ': ' + r.notFound.map(esc).join(', ') + '. ' + esc(t('checkId')) + '</div>';
+  const open = r.results.length === 1 ? r.results[0].id : S.open;
+  const c = r.results.find(x => x.id === open);
+  h += c ? page(c) : (r.results.length ? listView(r) : '');
+  if (r.truncated) h += '<div class="h">' + esc(t('truncatedMsg', { n: r.results.length })) + '</div>';
+  if (!r.results.length && !r.notFound.length) h = '<div class="empty">' + esc(t('nothingShow')) + '</div>';
+  $('out').innerHTML = h;
+}
+
+/* ----- TAB 4: REVENUE PAGE ----- */
+function setRevMonth(m) {
+  S.revMonth = m;
+  revRender();
+}
+
+function revChart(ms, tot, og, selectedMonth) {
+  const W = 680, H = 155, L = 56, R = 14, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
+  const gd = tot.map(x => x * rate()), gmax = niceStep(Math.max(0, ...gd) / 4) * 4, bw = Math.min(46, st * 0.54);
+  let s = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - ph * k / 4;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + f1(y) + '" y2="' + f1(y) + '" class="gl"/>'
+      + '<text x="' + (L - 6) + '" y="' + f1(y + 3.5) + '" text-anchor="end" class="ax">' + compact(gmax * k / 4) + '</text>';
+  }
+  ms.forEach((m, i) => {
+    const cx = L + st * (i + 0.5), h = gd[i] / gmax * ph, o = m === og;
+    const isSel = selectedMonth === m;
+    const isDim = selectedMonth !== 'ALL' && !isSel;
+    const cls = 'bar' + (o ? ' og' : '') + (isSel ? ' sel' : '') + (isDim ? ' dim' : '');
+    s += '<rect style="cursor:pointer" onclick="setRevMonth(\'' + m + '\')" x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - h) + '" width="' + f1(bw) + '" height="' + f1(h) + '" rx="2" class="' + cls + '"><title>' + esc(mName(m) + ': ' + money(tot[i]) + (o ? ' (' + t('ongoing') + ')' : '')) + '</title></rect>'
+      + '<text style="cursor:pointer;font-weight:' + (isSel ? '700' : '400') + '" onclick="setRevMonth(\'' + m + '\')" x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(m) + '</text>'
+      + (o ? '<text x="' + f1(cx) + '" y="' + (H - B + 25) + '" text-anchor="middle" class="ax og-t">' + esc(t('ongoing')) + '</text>' : '');
+  });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Revenue by month" class="chart">' + s + '</svg>';
+}
+
+function revRender() {
+  const r = S.rev;
+  if (!r) return;
+
+  const wasFocused = document.activeElement && document.activeElement.id === 'rq';
+  const cursorPos = wasFocused ? document.activeElement.selectionStart : 0;
+
+  const a = r.months.indexOf(r.latest), b = r.ongoing ? r.months.indexOf(r.ongoing) : -1;
+  const ms = r.months.slice(0, Math.max(a, b) + 1), og = b > -1 ? r.ongoing : '', pc = Math.round(r.rate * 100);
+
+  if (S.revMonth !== 'ALL' && ms.indexOf(S.revMonth) === -1) S.revMonth = 'ALL';
+  const sel = S.revMonth;
+  const activeMs = sel === 'ALL' ? ms : [sel];
+  const last = activeMs[activeMs.length - 1];
+
+  const fullGmvT = {};
+  const fullColT = {};
+  ms.forEach(m => {
+    fullGmvT[m] = r.creators.reduce((s, c) => s + (c.gmv[m] || 0), 0);
+    fullColT[m] = fullGmvT[m] * r.rate;
+  });
+
+  const periodOverallGmv = activeMs.reduce((s, m) => s + fullGmvT[m], 0);
+  const ytdOverallGmv = ms.reduce((s, m) => s + fullGmvT[m], 0);
+
+  let rows = r.creators.map(c => {
+    const v = {};
+    let periodSum = 0;
+    ms.forEach(m => { v[m] = (c.gmv[m] || 0) * r.rate; });
+    activeMs.forEach(m => { periodSum += v[m]; });
+    return { c, v, t: periodSum };
+  });
+
+  const periodGrand = activeMs.reduce((s, m) => s + fullColT[m], 0);
+  const earners = rows.filter(x => x.t > 0).length, all = rows.length;
+  const qs = S.rq.toLowerCase();
+  rows = rows.filter(x => (!S.ronly || x.t > 0) && (!qs || (x.c.name + ' ' + x.c.category).toLowerCase().includes(qs)));
+
+  if (S.rsort !== 'name' && S.rsort !== 'total' && activeMs.indexOf(S.rsort) === -1) S.rsort = 'total';
+  const key = S.rsort === 'name' ? x => x.c.name.toLowerCase() : S.rsort === 'total' ? x => x.t : x => x.v[S.rsort] || 0;
+  rows.sort((p, z) => (key(p) > key(z) ? 1 : key(p) < key(z) ? -1 : 0) * S.rdir);
+  const th = (k, txt) => '<th data-sort="' + k + '" class="' + (S.rsort === k ? 'on' : '') + '">' + txt + (S.rsort === k ? (S.rdir < 0 ? ' ↓' : ' ↑') : '') + '</th>';
+
+  let revMomHtml = '';
+  if (sel !== 'ALL') {
+    const idx = ms.indexOf(sel);
+    if (idx > 0 && fullColT[ms[idx - 1]] > 0) {
+      const diff = (fullColT[sel] - fullColT[ms[idx - 1]]) / fullColT[ms[idx - 1]];
+      revMomHtml = '<small class="' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '+' : '') + Math.round(diff * 100) + '% ' + t('vsPrev') + ' ' + mShort(ms[idx - 1]) + '</small>';
+    } else {
+      revMomHtml = '<small class="none">' + esc(t('firstTrackedMonth')) + '</small>';
+    }
+  } else {
+    revMomHtml = '<small class="none">' + mShort(ms[0]) + ' – ' + mShort(last) + ' ' + r.year + '</small>';
+  }
+
+  const gmvSubHtml = sel === 'ALL'
+    ? '<small class="none">' + esc(t('allPeriodSub')) + '</small>'
+    : '<small class="none">' + esc(t('ytdShareSub', { p: ytdOverallGmv > 0 ? Math.round(periodOverallGmv / ytdOverallGmv * 100) : 0, tot: money(ytdOverallGmv) })) + '</small>';
+
+  const pillsHtml = '<div class="m-switch" role="group" aria-label="Switch Revenue Month">'
+    + '<button class="m-pill' + (sel === 'ALL' ? ' on' : '') + '" onclick="setRevMonth(\'ALL\')">' + esc(t('allMonthsYtd')) + '</button>'
+    + ms.map(m => '<button class="m-pill' + (sel === m ? ' on' : '') + '" onclick="setRevMonth(\'' + m + '\')">'
+      + esc(mName(m)) + (m === og ? '<span class="dot-og" title="' + esc(t('ongoing')) + '"></span>' : '')
+      + '</button>').join('')
+    + '</div>';
+
+  const periodLabel = sel === 'ALL' ? mShort(ms[0]) + ' – ' + mShort(last) : mName(sel) + ' ' + r.year;
+
+  $('rOut').innerHTML = pillsHtml
+    + '<div class="tools">'
+    + '<input id="rq" value="' + esc(S.rq) + '" placeholder="' + esc(t('searchCreators')) + '" aria-label="Search creators">'
+    + '<label class="chk"><input type="checkbox" id="rOnly"' + (S.ronly ? ' checked' : '') + '> ' + esc(t('onlyRevCreators')) + '</label>'
+    + '</div>'
+    + ((sel === 'ALL' ? og : (sel === og ? og : '')) ? '<div class="miss">' + esc(mName(og)) + ' ' + esc(t('ongoingNote')) + '</div>' : '')
+    + '<div class="stats rev-stats">'
+    + '<div class="stat"><b class="rev-val">' + money(periodGrand) + '</b><span>' + esc(t('revCardLabel', { pc: pc })) + ' — ' + esc(periodLabel) + '</span>' + revMomHtml + '</div>'
+    + '<div class="stat"><b>' + money(periodOverallGmv) + '</b><span>' + esc(t('overallGmvCard')) + ' — ' + esc(periodLabel) + '</span>' + gmvSubHtml + '</div>'
+    + '<div class="stat"><b>' + earners + ' / ' + all + '</b><span>' + esc(t('creatorsGenRev')) + '</span><small class="none">' + (all ? Math.round(earners / all * 100) : 0) + '% ' + esc(t('activeRate')) + '</small></div>'
+    + '<div class="stat"><b>' + (earners ? money(periodGrand / earners) : '—') + '</b><span>' + esc(t('avgPerRevCreator')) + '</span></div></div>'
+    + '<div class="card">'
+    + '<div class="top"><span class="card-title" style="margin:0">' + esc(t('revTrendTitle')) + ' <span class="h" style="font-weight:400;margin-left:8px">' + esc(t('clickBarHint')) + '</span></span></div>'
+    + '<div class="chartbox">' + revChart(ms, ms.map(m => fullColT[m]), og, sel) + '</div>'
+    + '</div>'
+    + (rows.length
+      ? '<div class="card scroll"><table class="rt"><thead><tr>' + th('name', esc(t('creator'))) + activeMs.map(m => th(m, mShort(m) + (m === og ? '<span class="pill">' + esc(t('ongoing')) + '</span>' : ''))).join('') + (activeMs.length > 1 ? th('total', esc(t('total'))) : '') + '</tr></thead><tbody>'
+        + rows.map(x => '<tr><td>' + esc(x.c.name) + (x.c.category ? '<div class="h">' + esc(x.c.category) + '</div>' : '') + '</td>'
+          + activeMs.map(m => '<td>' + (x.v[m] ? money(x.v[m]) : '<span class="none">—</span>') + '</td>').join('')
+          + (activeMs.length > 1 ? '<td><b>' + (x.t ? money(x.t) : '—') + '</b></td>' : '') + '</tr>').join('')
+        + '<tr class="tot"><td>' + esc(t('allCreators')) + '</td>' + activeMs.map(m => '<td>' + money(fullColT[m]) + '</td>').join('') + (activeMs.length > 1 ? '<td>' + money(periodGrand) + '</td>' : '') + '</tr>'
+        + '<tr class="tot" style="background:#fdfafa;color:var(--muted)"><td>' + esc(t('overallGmvCard')) + ' (100%)</td>' + activeMs.map(m => '<td>' + money(fullGmvT[m]) + '</td>').join('') + (activeMs.length > 1 ? '<td>' + money(periodOverallGmv) + '</td>' : '') + '</tr>'
+        + '</tbody></table></div>'
+      : '<div class="card"><div class="empty">' + esc(t('noMatchFilter')) + '</div></div>')
+    + '<div class="h">' + esc(t('showingOf', { a: rows.length, b: all, pc: pc, fx: new Intl.NumberFormat('id-ID').format(activeFx()) })) + '</div>';
+
+  if (wasFocused) {
+    const inp = $('rq');
+    if (inp) {
+      inp.focus();
+      inp.setSelectionRange(cursorPos, cursorPos);
+    }
+  }
+}
+
+$('rOut').addEventListener('input', e => {
+  if (e.target && e.target.id === 'rq') { S.rq = e.target.value; revRender(); }
+});
+$('rOut').addEventListener('change', e => {
+  if (e.target && e.target.id === 'rOnly') { S.ronly = e.target.checked; revRender(); }
+});
+$('rOut').addEventListener('click', e => {
+  const tSort = e.target.closest('[data-sort]');
+  if (!tSort) return;
+  const k = tSort.dataset.sort;
+  S.rdir = S.rsort === k ? -S.rdir : (k === 'name' ? 1 : -1);
+  S.rsort = k;
+  revRender();
+});
+
+$('out').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]');
+  if (o) { S.open = o.dataset.open; S.creatorMonth = 'ALL'; show(); window.scrollTo(0, 0); }
+  else if (e.target.closest('[data-back]')) { S.open = null; S.creatorMonth = 'ALL'; show(); }
+});
+
+/* ----- SUGGESTIONS ----- */
+run('getIndex').then(l => { IDX = l.map(c => ({id:c.id, name:c.name, cat:c.category, n:c.name.replace(/^@/, '').toLowerCase(), k:c.id.toLowerCase()})); }).catch(() => {});
+
+function token() {
+  const q = $('q'), v = q.value, p = q.selectionStart, sep = /[\s,;]/;
+  let s = p, e = p;
+  while (s > 0 && !sep.test(v[s - 1])) s--;
+  while (e < v.length && !sep.test(v[e])) e++;
+  return {s, e, t: v.slice(s, e)};
+}
+function suggest() {
+  const {s, e, t: tok} = token(), x = tok.replace(/^@/, '').toLowerCase();
+  let items = [];
+  if (x.length >= 2 && !/^https?:/.test(x)) {
+    items = IDX.filter(c => c.n.includes(x) || c.k.startsWith(x))
+      .sort((a, b) => (b.n.startsWith(x) - a.n.startsWith(x)) || a.n.localeCompare(b.n))
+      .slice(0, 8);
+    if (items.length === 1 && items[0].k === x) items = [];
+  }
+  SG = {items, i:-1, s, e};
+  drawSug();
+}
+function drawSug() {
+  const b = $('sug');
+  b.hidden = !SG.items.length;
+  $('q').setAttribute('aria-expanded', String(!b.hidden));
+  b.innerHTML = SG.items.map((c, k) => '<div role="option" id="sg' + k + '" class="' + (k === SG.i ? 'on' : '') + '" data-k="' + k + '"><b>' + esc(c.name) + '</b><span>' + esc(c.cat) + '</span><small>' + esc(c.id) + '</small></div>').join('');
+  const a = b.querySelector('.on'); if (a) a.scrollIntoView({block:'nearest'});
+}
+function pick(k) {
+  const c = SG.items[k]; if (!c) return;
+  const q = $('q'), v = q.value, pos = SG.s + c.id.length + 1;
+  q.value = v.slice(0, SG.s) + c.id + ' ' + v.slice(SG.e).replace(/^[\s,;]+/, '');
+  q.setSelectionRange(pos, pos);
+  SG.items = []; drawSug();
+  if (q.value.trim() === c.id) find();
+}
+$('q').addEventListener('input', suggest);
+$('q').addEventListener('click', suggest);
+$('q').addEventListener('blur', () => setTimeout(() => { SG.items = []; drawSug(); }, 120));
+$('sug').addEventListener('mousedown', e => { e.preventDefault(); const d = e.target.closest('[data-k]'); if (d) pick(+d.dataset.k); });
+$('q').addEventListener('keydown', e => {
+  const n = SG.items.length;
+  if (n) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); SG.i = (SG.i + 1) % n; return drawSug(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); SG.i = SG.i <= 0 ? n - 1 : SG.i - 1; return drawSug(); }
+    if (e.key === 'Escape') { SG.items = []; return drawSug(); }
+    if (e.key === 'Enter' && !e.shiftKey && SG.i >= 0) { e.preventDefault(); return pick(SG.i); }
+  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); find(); }
+});
+
+/* ----- URL QUERY PARAMS (VERCEL / BROWSER) ----- */
+(function initFromUrl() {
+  const p = Object.fromEntries(new URLSearchParams(window.location.search));
+  if (p.lang === 'en') setLang('en');
+  if (p.page === 'revenue') setTab('rev');
+  else if (p.page === 'gmv') setTab('gmv');
+  else if (p.page === 'uploads' || p.page === 'konten') setTab('up');
+  if (p.id) { $('q').value = p.id; find(p.id); }
+})();
+
+applyStaticLang();
+loadData();
+$('q').focus();
+</script>
+</body>
+</html>
