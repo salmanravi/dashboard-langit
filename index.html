@@ -259,14 +259,6 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
 .cat-hdr{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
 .cat-track{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
 .cat-fill{height:100%;background:var(--accent);border-radius:4px}
-.login{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:28px 24px;display:flex;flex-direction:column;gap:6px;box-shadow:0 12px 40px rgba(35,20,20,.08)}
-.login-card h1{font-size:22px;margin:0;color:var(--accent-dark)}
-.login-card label{font-size:13px;font-weight:600;color:var(--muted);margin-top:10px}
-.login-card input{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px;background:#fff}
-.login-card .primary{margin-top:16px;padding:11px}
-.login-card .miss{margin-top:10px}
-.logout{width:100%;font-size:13px}
 </style>
 </head>
 <body>
@@ -334,7 +326,6 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
           <button id="fxReset" class="fx-btn hidden" onclick="resetFx()" title="Kembalikan ke kurs sheet">↺</button>
         </div>
       </div>
-      <button class="logout" onclick="logout()" data-i18n="logout">Keluar</button>
     </div>
   </aside>
 
@@ -400,79 +391,33 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
   </div>
 </div>
 
-<div id="login" class="login hidden" role="dialog" aria-modal="true" aria-labelledby="lgT">
-  <form class="login-card" onsubmit="doLogin(event)">
-    <h1 id="lgT" data-i18n="loginTitle">Masuk</h1>
-    <div class="h" data-i18n="loginSub">Masukkan username dan password untuk membuka dashboard.</div>
-    <label for="lgU" data-i18n="loginUser">Username</label>
-    <input id="lgU" autocomplete="username" required>
-    <label for="lgP" data-i18n="loginPass">Password</label>
-    <input id="lgP" type="password" autocomplete="current-password" required>
-    <div id="lgE" class="miss hidden" role="alert"></div>
-    <button class="primary" id="lgB" type="submit" data-i18n="loginBtn">Masuk</button>
-  </form>
-</div>
-
 <script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzAMWCCkY1IeacKeoxs0ptNViHUmlRNT8SdbPmR3lwdq1-tRDvr3UTO2L4rmQwzayIx/exec';
+
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function run(fn, arg) {
-  const p = new URLSearchParams();
-  if (fn === 'findChannels') { p.set('action', 'find'); p.set('q', arg || ''); }
-  else if (fn === 'getIndex') p.set('action', 'index');
-  else p.set('action', 'revenue');
-  const res = await fetch('/api/data?' + p.toString());
-  if (res.status === 401) { showLogin(); throw new Error(t('loginNeeded')); }
+  const url = new URL(API_URL);
+  if (fn === 'findChannels') {
+    url.searchParams.set('action', 'find');
+    url.searchParams.set('q', arg || '');
+  } else if (fn === 'getIndex') {
+    url.searchParams.set('action', 'index');
+  } else {
+    url.searchParams.set('action', 'revenue');
+  }
+  const res = await fetch(url.toString(), { redirect: 'follow' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const data = await res.json();
   if (data && data.error) throw new Error(data.error);
   return data;
 }
 
-/* ----- LOGIN ----- */
-function showLogin() {
-  $('login').classList.remove('hidden');
-  applyStaticLang();
-  setTimeout(() => $('lgU').focus(), 0);
-}
-
-async function doLogin(e) {
-  e.preventDefault();
-  const b = $('lgB'), er = $('lgE');
-  er.classList.add('hidden'); b.disabled = true; b.textContent = t('loginBusy');
-  try {
-    const res = await fetch('/api/data?action=login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username: $('lgU').value.trim(), password: $('lgP').value})
-    });
-    if (res.ok) { location.reload(); return; }
-    er.textContent = t(res.status === 401 ? 'loginBad' : 'loginNet');
-  } catch (x) { er.textContent = t('loginNet'); }
-  $('lgP').value = '';
-  er.classList.remove('hidden'); b.disabled = false; b.textContent = t('loginBtn');
-}
-
-async function logout() {
-  try { await fetch('/api/data?action=logout', {method: 'POST'}); } catch (x) {}
-  location.reload();
-}
-
 /* ----- DICTIONARY (ID DEFAULT, EN SECONDARY) ----- */
 const I18N = {
   id: {
     appTitle: 'YouTube Performance',
-    loginTitle: 'Masuk',
-    loginSub: 'Masukkan username dan password untuk membuka dashboard.',
-    loginUser: 'Username',
-    loginPass: 'Password',
-    loginBtn: 'Masuk',
-    loginBusy: 'Memeriksa…',
-    loginBad: 'Username atau password salah.',
-    loginNet: 'Tidak bisa terhubung. Coba lagi.',
-    loginNeeded: 'Silakan masuk terlebih dahulu.',
-    logout: 'Keluar',
     dashSub: 'Dashboard Langit Mediatama',
     updatedAt: 'Diperbarui pukul',
     lblLang: 'Bahasa',
@@ -588,16 +533,6 @@ const I18N = {
   },
   en: {
     appTitle: 'YouTube Performance',
-    loginTitle: 'Sign in',
-    loginSub: 'Enter your username and password to open the dashboard.',
-    loginUser: 'Username',
-    loginPass: 'Password',
-    loginBtn: 'Sign in',
-    loginBusy: 'Checking…',
-    loginBad: 'Wrong username or password.',
-    loginNet: 'Could not connect. Please try again.',
-    loginNeeded: 'Please sign in first.',
-    logout: 'Sign out',
     dashSub: 'Langit Mediatama Dashboard',
     updatedAt: 'Updated at',
     lblLang: 'Language',
