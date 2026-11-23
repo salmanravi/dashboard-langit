@@ -267,6 +267,8 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
 .login-card .primary{margin-top:16px;padding:11px}
 .login-card .miss{margin-top:10px}
 .logout{width:100%;font-size:13px}
+.chart .bar.bn{fill:var(--vid)}
+.bonus-tag{display:block;font-size:11px;font-weight:600;color:var(--vid)}
 </style>
 </head>
 <body>
@@ -448,8 +450,9 @@ async function doLogin(e) {
       body: JSON.stringify({username: $('lgU').value.trim(), password: $('lgP').value})
     });
     if (res.ok) { location.reload(); return; }
-    er.textContent = t(res.status === 401 ? 'loginBad' : 'loginNet');
-  } catch (x) { er.textContent = t('loginNet'); }
+    let m = ''; try { m = (await res.json()).error; } catch (x) {}
+    er.textContent = res.status === 401 ? t('loginBad') : t('loginNet') + (m ? ' (' + m + ')' : ' (HTTP ' + res.status + ')');
+  } catch (x) { er.textContent = t('loginNet') + ' (' + ((x && x.message) || x) + ')'; }
   $('lgP').value = '';
   er.classList.remove('hidden'); b.disabled = false; b.textContent = t('loginBtn');
 }
@@ -499,6 +502,14 @@ const I18N = {
     loadingRev: 'Memuat data pendapatan…',
     searching: 'Mencari…',
     revTitle: 'Pendapatan',
+    enrollBonus: 'Bonus Enrollment',
+    bonusCol: 'Bonus Enrollment',
+    bonusCard: 'Bonus Enrollment',
+    bonusCardSub: '{n} kreator terdaftar × {b} per kreator',
+    bonusCardNote: 'Dibayar sekali per kreator, dihitung di bulan kreator itu di-enroll.',
+    bonusTag: 'bonus',
+    totalAgency: 'Total Pendapatan Agensi',
+    totalAgencySub: 'Pendapatan {pc}% GMV {a} + bonus enrollment {b}',
     revSub: 'Pendapatan agensi dari setiap kreator berdasarkan persentase GMV mereka.',
     allMonthsYtd: 'Semua Bulan (YTD)',
     allMonths: 'Semua Bulan',
@@ -624,6 +635,14 @@ const I18N = {
     loadingRev: 'Loading revenue data…',
     searching: 'Searching…',
     revTitle: 'Revenue',
+    enrollBonus: 'Enrollment Bonus',
+    bonusCol: 'Enrollment Bonus',
+    bonusCard: 'Enrollment Bonus',
+    bonusCardSub: '{n} enrolled creators × {b} each',
+    bonusCardNote: 'Paid once per creator, counted in the month they were enrolled.',
+    bonusTag: 'bonus',
+    totalAgency: 'Total Agency Revenue',
+    totalAgencySub: '{pc}% of GMV {a} + enrollment bonus {b}',
     revSub: 'Our revenue from every creator, as a share of their GMV.',
     allMonthsYtd: 'All Months (YTD)',
     allMonths: 'All Months',
@@ -1361,7 +1380,8 @@ function page(c) {
       [t('category'), c.category || '—'],
       ['Type', c.type],
       ['Status', c.status],
-      ['Enrolled', c.enrolled]
+      ['Enrolled', c.enrolled],
+      [t('enrollBonus'), c.bonus > 0 ? money(c.bonus) + (c.bonusMonth ? ' (' + mName(c.bonusMonth) + ')' : '') : '']
     ]
     .filter(x => x[1]).map(x => '<span>' + esc(x[0]) + ': <b>' + esc(x[1]) + '</b></span>').join('')
     + phoneHtml(c.phone)
@@ -1409,7 +1429,7 @@ function page(c) {
         return '<tr class="link" onclick="setCreatorMonth(\'' + (sel === m ? 'ALL' : m) + '\')">'
           + '<td>' + esc(mName(m)) + ' ' + r.year + (o ? '<span class="pill">' + esc(t('ongoing')) + '</span>' : '') + '</td>'
           + '<td class="gmv" style="--w:' + Math.round(g / max * 100) + '%">' + money(g) + '</td>'
-          + '<td class="rev-cell">' + money(rev) + '</td>'
+          + '<td class="rev-cell">' + money(rev) + (c.bonus > 0 && c.bonusMonth === m ? '<small class="bonus-tag">+ ' + esc(money(c.bonus)) + ' ' + esc(t('bonusTag')) + '</small>' : '') + '</td>'
           + '<td>' + num(v) + '</td>'
           + '<td>' + (v && g ? money(g / v) : '—') + '</td>'
           + '<td class="' + (d == null ? 'none' : d >= 0 ? 'up' : 'down') + '">' + (d == null ? '—' : (d >= 0 ? '+' : '') + Math.round(d * 100) + '%') + '</td>'
@@ -1468,9 +1488,9 @@ function setRevMonth(m) {
   revRender();
 }
 
-function revChart(ms, tot, og, selectedMonth) {
+function revChart(ms, tot, og, selectedMonth, bon) {
   const W = 680, H = 155, L = 56, R = 14, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
-  const gd = tot.map(x => x * rate()), gmax = niceStep(Math.max(0, ...gd) / 4) * 4, bw = Math.min(46, st * 0.54);
+  const gd = tot.map(x => x * rate()), gb = bon.map(x => x * rate()), gmax = niceStep(Math.max(0, ...gd) / 4) * 4, bw = Math.min(46, st * 0.54);
   let s = '';
   for (let k = 0; k <= 4; k++) {
     const y = T + ph - ph * k / 4;
@@ -1478,12 +1498,14 @@ function revChart(ms, tot, og, selectedMonth) {
       + '<text x="' + (L - 6) + '" y="' + f1(y + 3.5) + '" text-anchor="end" class="ax">' + compact(gmax * k / 4) + '</text>';
   }
   ms.forEach((m, i) => {
-    const cx = L + st * (i + 0.5), h = gd[i] / gmax * ph, o = m === og;
-    const isSel = selectedMonth === m;
-    const isDim = selectedMonth !== 'ALL' && !isSel;
+    const cx = L + st * (i + 0.5), hT = gd[i] / gmax * ph, hB = gb[i] / gmax * ph, hA = hT - hB, o = m === og;
+    const isSel = selectedMonth === m, isDim = selectedMonth !== 'ALL' && !isSel;
     const cls = 'bar' + (o ? ' og' : '') + (isSel ? ' sel' : '') + (isDim ? ' dim' : '');
-    s += '<rect style="cursor:pointer" onclick="setRevMonth(\'' + m + '\')" x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - h) + '" width="' + f1(bw) + '" height="' + f1(h) + '" rx="2" class="' + cls + '"><title>' + esc(mName(m) + ': ' + money(tot[i]) + (o ? ' (' + t('ongoing') + ')' : '')) + '</title></rect>'
-      + '<text style="cursor:pointer;font-weight:' + (isSel ? '700' : '400') + '" onclick="setRevMonth(\'' + m + '\')" x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(m) + '</text>'
+    const tip = esc(mName(m) + ': ' + money(tot[i]) + (bon[i] ? ' (' + t('bonusCard') + ' ' + money(bon[i]) + ')' : '') + (o ? ' (' + t('ongoing') + ')' : ''));
+    const click = 'onclick="setRevMonth(\'' + m + '\')"';
+    s += '<rect style="cursor:pointer" ' + click + ' x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - hA) + '" width="' + f1(bw) + '" height="' + f1(hA) + '" rx="2" class="' + cls + '"><title>' + tip + '</title></rect>';
+    if (hB > 0) s += '<rect style="cursor:pointer" ' + click + ' x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - hT) + '" width="' + f1(bw) + '" height="' + f1(hB) + '" rx="2" class="' + cls + ' bn"><title>' + tip + '</title></rect>';
+    s += '<text style="cursor:pointer;font-weight:' + (isSel ? '700' : '400') + '" ' + click + ' x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(m) + '</text>'
       + (o ? '<text x="' + f1(cx) + '" y="' + (H - B + 25) + '" text-anchor="middle" class="ax og-t">' + esc(t('ongoing')) + '</text>' : '');
   });
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Revenue by month" class="chart">' + s + '</svg>';
@@ -1519,16 +1541,20 @@ function revRender() {
     let periodSum = 0;
     ms.forEach(m => { v[m] = (c.gmv[m] || 0) * r.rate; });
     activeMs.forEach(m => { periodSum += v[m]; });
-    return { c, v, t: periodSum };
+    return { c, v, t: periodSum, b: (c.bonus > 0 && (sel === 'ALL' || c.bonusMonth === sel)) ? c.bonus : 0 };
   });
 
   const periodGrand = activeMs.reduce((s, m) => s + fullColT[m], 0);
   const earners = rows.filter(x => x.t > 0).length, all = rows.length;
   const qs = S.rq.toLowerCase();
-  rows = rows.filter(x => (!S.ronly || x.t > 0) && (!qs || (x.c.name + ' ' + x.c.category).toLowerCase().includes(qs)));
+  const inPeriod = c => c.bonus > 0 && (sel === 'ALL' || c.bonusMonth === sel);
+  const bonusN = r.creators.filter(inPeriod).length, bonusTotal = r.creators.reduce((s, c) => s + (inPeriod(c) ? c.bonus : 0), 0);
+  const bonusM = {};
+  ms.forEach(m => { bonusM[m] = r.creators.reduce((s, c) => s + (c.bonus > 0 && c.bonusMonth === m ? c.bonus : 0), 0); });
+  rows = rows.filter(x => (!S.ronly || x.t > 0 || x.b > 0) && (!qs || (x.c.name + ' ' + x.c.category).toLowerCase().includes(qs)));
 
-  if (S.rsort !== 'name' && S.rsort !== 'total' && activeMs.indexOf(S.rsort) === -1) S.rsort = 'total';
-  const key = S.rsort === 'name' ? x => x.c.name.toLowerCase() : S.rsort === 'total' ? x => x.t : x => x.v[S.rsort] || 0;
+  if (S.rsort !== 'name' && S.rsort !== 'total' && S.rsort !== 'bonus' && activeMs.indexOf(S.rsort) === -1) S.rsort = 'total';
+  const key = S.rsort === 'name' ? x => x.c.name.toLowerCase() : S.rsort === 'total' ? x => x.t : S.rsort === 'bonus' ? x => x.b : x => x.v[S.rsort] || 0;
   rows.sort((p, z) => (key(p) > key(z) ? 1 : key(p) < key(z) ? -1 : 0) * S.rdir);
   const th = (k, txt) => '<th data-sort="' + k + '" class="' + (S.rsort === k ? 'on' : '') + '">' + txt + (S.rsort === k ? (S.rdir < 0 ? ' ↓' : ' ↑') : '') + '</th>';
 
@@ -1569,17 +1595,22 @@ function revRender() {
     + '<div class="stat"><b>' + money(periodOverallGmv) + '</b><span>' + esc(t('overallGmvCard')) + ' — ' + esc(periodLabel) + '</span>' + gmvSubHtml + '</div>'
     + '<div class="stat"><b>' + earners + ' / ' + all + '</b><span>' + esc(t('creatorsGenRev')) + '</span><small class="none">' + (all ? Math.round(earners / all * 100) : 0) + '% ' + esc(t('activeRate')) + '</small></div>'
     + '<div class="stat"><b>' + (earners ? money(periodGrand / earners) : '—') + '</b><span>' + esc(t('avgPerRevCreator')) + '</span></div></div>'
+    + '<div class="stats rev-stats" style="grid-template-columns:repeat(2,1fr)">'
+    + '<div class="stat"><b class="rev-val">' + money(bonusTotal) + '</b><span>' + esc(t('bonusCard')) + ' — ' + esc(periodLabel) + '</span><small class="none">' + esc(t('bonusCardSub', { n: bonusN, b: money(r.bonus || 0) })) + '</small><small class="none">' + esc(t('bonusCardNote')) + '</small></div>'
+    + '<div class="stat"><b class="rev-val">' + money(periodGrand + bonusTotal) + '</b><span>' + esc(t('totalAgency')) + ' — ' + esc(periodLabel) + '</span><small class="none">' + esc(t('totalAgencySub', { pc: pc, a: money(periodGrand), b: money(bonusTotal) })) + '</small></div></div>'
     + '<div class="card">'
     + '<div class="top"><span class="card-title" style="margin:0">' + esc(t('revTrendTitle')) + ' <span class="h" style="font-weight:400;margin-left:8px">' + esc(t('clickBarHint')) + '</span></span></div>'
-    + '<div class="chartbox">' + revChart(ms, ms.map(m => fullColT[m]), og, sel) + '</div>'
+    + '<div class="legend"><span><i style="background:var(--accent)"></i>' + esc(t('revCardLabel', { pc: pc })) + '</span><span><i style="background:var(--vid)"></i>' + esc(t('bonusCard')) + '</span></div>'
+    + '<div class="chartbox">' + revChart(ms, ms.map(m => fullColT[m] + bonusM[m]), og, sel, ms.map(m => bonusM[m])) + '</div>'
     + '</div>'
     + (rows.length
-      ? '<div class="card scroll"><table class="rt"><thead><tr>' + th('name', esc(t('creator'))) + activeMs.map(m => th(m, mShort(m) + (m === og ? '<span class="pill">' + esc(t('ongoing')) + '</span>' : ''))).join('') + (activeMs.length > 1 ? th('total', esc(t('total'))) : '') + '</tr></thead><tbody>'
+      ? '<div class="card scroll"><table class="rt"><thead><tr>' + th('name', esc(t('creator'))) + activeMs.map(m => th(m, mShort(m) + (m === og ? '<span class="pill">' + esc(t('ongoing')) + '</span>' : ''))).join('') + (activeMs.length > 1 ? th('total', esc(t('total'))) : '') + th('bonus', esc(t('bonusCol'))) + '</tr></thead><tbody>'
         + rows.map(x => '<tr><td>' + esc(x.c.name) + (x.c.category ? '<div class="h">' + esc(x.c.category) + '</div>' : '') + '</td>'
           + activeMs.map(m => '<td>' + (x.v[m] ? money(x.v[m]) : '<span class="none">—</span>') + '</td>').join('')
-          + (activeMs.length > 1 ? '<td><b>' + (x.t ? money(x.t) : '—') + '</b></td>' : '') + '</tr>').join('')
-        + '<tr class="tot"><td>' + esc(t('allCreators')) + '</td>' + activeMs.map(m => '<td>' + money(fullColT[m]) + '</td>').join('') + (activeMs.length > 1 ? '<td>' + money(periodGrand) + '</td>' : '') + '</tr>'
-        + '<tr class="tot" style="background:#fdfafa;color:var(--muted)"><td>' + esc(t('overallGmvCard')) + ' (100%)</td>' + activeMs.map(m => '<td>' + money(fullGmvT[m]) + '</td>').join('') + (activeMs.length > 1 ? '<td>' + money(periodOverallGmv) + '</td>' : '') + '</tr>'
+          + (activeMs.length > 1 ? '<td><b>' + (x.t ? money(x.t) : '—') + '</b></td>' : '')
+          + '<td>' + (x.b ? money(x.b) + (sel === 'ALL' && x.c.bonusMonth ? '<div class="h">' + esc(mName(x.c.bonusMonth)) + '</div>' : '') : '<span class="none">—</span>') + '</td></tr>').join('')
+        + '<tr class="tot"><td>' + esc(t('allCreators')) + '</td>' + activeMs.map(m => '<td>' + money(fullColT[m]) + '</td>').join('') + (activeMs.length > 1 ? '<td>' + money(periodGrand) + '</td>' : '') + '<td>' + money(bonusTotal) + '</td></tr>'
+        + '<tr class="tot" style="background:#fdfafa;color:var(--muted)"><td>' + esc(t('overallGmvCard')) + ' (100%)</td>' + activeMs.map(m => '<td>' + money(fullGmvT[m]) + '</td>').join('') + (activeMs.length > 1 ? '<td>' + money(periodOverallGmv) + '</td>' : '') + '<td></td></tr>'
         + '</tbody></table></div>'
       : '<div class="card"><div class="empty">' + esc(t('noMatchFilter')) + '</div></div>')
     + '<div class="h">' + esc(t('showingOf', { a: rows.length, b: all, pc: pc, fx: new Intl.NumberFormat('id-ID').format(activeFx()) })) + '</div>';
