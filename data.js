@@ -6,10 +6,10 @@
  *   APPS_SCRIPT_URL   your Apps Script web app URL (ends in /exec)
  *   APPS_SCRIPT_KEY   same value as API_KEY in Apps Script > Script properties
  */
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const MAX_AGE = 60 * 60 * 12; // stay signed in for 12 hours
-const ACTIONS = ['find', 'index', 'revenue'];
+const ACTIONS = ['find', 'index', 'revenue', 'target'];
 
 const sha = s => crypto.createHash('sha256').update(String(s)).digest();
 const same = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
@@ -48,11 +48,21 @@ function body(req) {
   return req.body || {};
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
+  try {
+    await handle(req, res);
+  } catch (e) {
+    console.error(e);
+    if (!res.headersSent) res.status(500).json({ error: 'Kesalahan server: ' + (e && e.message ? e.message : e) });
+  }
+}
+
+async function handle(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const env = process.env;
-  if (!env.SESSION_SECRET || !env.APPS_SCRIPT_URL || !env.APPS_SCRIPT_KEY) {
-    return res.status(500).json({ error: 'Server belum dikonfigurasi (environment variables).' });
+  const missing = ['SESSION_SECRET', 'APPS_SCRIPT_URL', 'APPS_SCRIPT_KEY'].filter(k => !env[k]);
+  if (missing.length) {
+    return res.status(500).json({ error: 'Environment variable belum diatur di Vercel: ' + missing.join(', ') });
   }
   const q = req.query || {};
   const action = q.action || '';
@@ -101,4 +111,4 @@ module.exports = async (req, res) => {
   } catch (e) {
     return res.status(502).json({ error: e.message || 'Gagal menghubungi backend.' });
   }
-};
+}
