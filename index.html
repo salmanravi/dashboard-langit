@@ -294,6 +294,16 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
 .cmp-bar.tg{background:var(--bar);border:1px dashed var(--accent)}
 .cmp-bar.act{background:var(--accent)}
 .tgt-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+.pbar-proj{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,var(--bar),var(--bar) 6px,#fff 6px,#fff 12px);border:1px dashed var(--accent);border-left:0;box-sizing:border-box}
+.rng{position:relative;height:12px;margin-top:2px}
+.rng i{position:absolute;top:5px;height:2px;background:var(--ink);opacity:.55}
+.rng b{position:absolute;top:1px;width:2px;height:10px;margin-left:-1px;background:var(--ink);opacity:.55}
+.proj-big{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--accent-dark);line-height:1.1}
+.proj-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.proj-tbl th,.proj-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.proj-tbl th:first-child,.proj-tbl td:first-child{text-align:left;white-space:normal}
+.proj-tbl tr.mid td{background:var(--accent-soft);font-weight:700}
+.proj-tbl small{display:block;color:var(--muted);font-weight:400;font-size:12px}
 </style>
 </head>
 <body>
@@ -558,6 +568,33 @@ const I18N = {
     tgtMetricComm: 'Komisi MCN 5%',
     tgtMetricAvg: 'Rata-rata GMV per Bulan',
     tgtSource: 'Sumber: sheet Target Tracker.',
+    projTitle: 'Proyeksi Akhir Tahun',
+    projNone: 'Belum cukup data untuk membuat proyeksi (dibutuhkan minimal satu bulan penuh dan satu bulan berjalan).',
+    projExpected: 'Perkiraan GMV akhir tahun (realistis)',
+    projOfTarget: '{p} dari target',
+    projVsLast: '{g} vs {y}',
+    projReached: 'Target sudah tercapai. Dengan pace saat ini, GMV akhir tahun diperkirakan {a} di atas target.',
+    projNeedOk: 'Butuh {a} per bulan untuk mencapai target. Pace realistis saat ini {b} per bulan, jadi target diperkirakan tercapai.',
+    projNeedGap: 'Butuh {a} per bulan untuk mencapai target. Pace realistis saat ini {b} per bulan, jadi perlu naik {x}.',
+    projRange: 'Kisaran skenario: {a} – {b}',
+    projAvgDone: 'Rata-rata per bulan (bulan selesai)',
+    projRun: 'Pace bulan berjalan',
+    projScen: 'Skenario',
+    projPace: 'Pace per bulan',
+    projTotal: 'GMV akhir tahun',
+    projPct: '% target',
+    projComm: 'Komisi MCN',
+    projLow: 'Konservatif',
+    projLowBasis: 'Bulan terendah dari 3 bulan selesai terakhir',
+    projMid: 'Realistis',
+    projMidBasis: 'Rata-rata 3 bulan selesai terakhir',
+    projHigh: 'Optimis',
+    projHighBasis: 'Yang lebih tinggi: bulan terbaik atau pace bulan berjalan',
+    projChartTitle: 'GMV per Bulan: Aktual dan Proyeksi',
+    projActual: 'Aktual',
+    projProjected: 'Proyeksi (realistis)',
+    projShort: 'Proyeksi',
+    projNote: 'Proyeksi adalah perkiraan, bukan jaminan. Sisa bulan berjalan dihitung proporsional dari sisa hari ({d} dari {n} hari), dan bulan berikutnya memakai pace yang sama.',
     loadingGmv: 'Memuat data GMV…',
     loadingUp: 'Memuat data unggahan…',
     loadingRev: 'Memuat data pendapatan…',
@@ -710,6 +747,33 @@ const I18N = {
     tgtMetricComm: '5% MCN Commission',
     tgtMetricAvg: 'Avg. Monthly GMV',
     tgtSource: 'Source: Target Tracker sheet.',
+    projTitle: 'Year-End Projection',
+    projNone: 'Not enough data for a projection yet (needs at least one completed month and one running month).',
+    projExpected: 'Expected year-end GMV (realistic)',
+    projOfTarget: '{p} of target',
+    projVsLast: '{g} vs {y}',
+    projReached: 'The target is already reached. At the current pace, year-end GMV is expected to be {a} above target.',
+    projNeedOk: 'You need {a} per month to reach the target. The current realistic pace is {b} per month, so the target is expected to be reached.',
+    projNeedGap: 'You need {a} per month to reach the target. The current realistic pace is {b} per month, so it must rise by {x}.',
+    projRange: 'Scenario range: {a} – {b}',
+    projAvgDone: 'Average per month (completed months)',
+    projRun: 'Running month pace',
+    projScen: 'Scenario',
+    projPace: 'Monthly pace',
+    projTotal: 'Year-end GMV',
+    projPct: '% of target',
+    projComm: 'MCN commission',
+    projLow: 'Conservative',
+    projLowBasis: 'Lowest of the last 3 completed months',
+    projMid: 'Realistic',
+    projMidBasis: 'Average of the last 3 completed months',
+    projHigh: 'Optimistic',
+    projHighBasis: 'Higher of: best month or running month pace',
+    projChartTitle: 'Monthly GMV: Actual and Projected',
+    projActual: 'Actual',
+    projProjected: 'Projected (realistic)',
+    projShort: 'Projected',
+    projNote: 'A projection is an estimate, not a guarantee. The rest of the running month is prorated by the days left ({d} of {n} days), and later months use the same pace.',
     loadingGmv: 'Loading GMV data…',
     loadingUp: 'Loading upload data…',
     loadingRev: 'Loading revenue data…',
@@ -1077,7 +1141,95 @@ function tgtRender() {
       + '<div class="tgt-foot"><span>' + esc(t('tgtGrowth', { y: yb })) + '</span><b class="' + gClass(g) + '">' + gText(g) + '</b></div></div>';
   }).join('');
 
-  el.innerHTML = hero + '<div class="tgt-grid">' + cards + '</div><div class="h">' + esc(t('tgtSource')) + '</div>';
+  el.innerHTML = hero + tgtProjection(d, main, d.rows) + '<div class="tgt-grid">' + cards + '</div><div class="h">' + esc(t('tgtSource')) + '</div>';
+}
+
+/* ----- TARGET PROJECTION ----- */
+function tgtProjCalc(d, main) {
+  const ms = d.monthly || [], og = d.ongoing, oi = og ? ms.findIndex(x => x.month === og) : -1;
+  if (oi < 0 || !d.today) return null;
+  const done = ms.slice(0, oi).filter(x => x.total > 0).map(x => x.total);
+  if (!done.length) return null;
+  const recent = done.slice(-3);
+  const dim = d.today.daysInMonth, elapsed = Math.max(0, d.today.day - 1); // days of data assumed complete
+  const remainFrac = (dim - elapsed) / dim, future = ms.length - 1 - oi, left = remainFrac + future;
+  const cur = ms[oi].total;
+  const avg = recent.reduce((s, x) => s + x, 0) / recent.length;
+  const low = Math.min(...recent), best = Math.max(...recent);
+  const runRate = elapsed >= 7 ? cur / (elapsed / dim) : 0;
+  const scen = [low, avg, Math.max(best, runRate)].map(pace => ({ pace, total: main.actual + pace * left }));
+  return {
+    ms, oi, avg, left, remainFrac, scen, runRate, dim, elapsed,
+    doneAvg: done.reduce((s, x) => s + x, 0) / done.length,
+    need: main.target > main.actual && left > 0 ? (main.target - main.actual) / left : 0
+  };
+}
+
+function projBar(actual, p, target) {
+  const mid = p.scen[1].total, lo = p.scen[0].total, hi = p.scen[2].total;
+  const max = Math.max(hi, target, mid, actual) * 1.03, pc = v => f1(v / max * 100), tm = target / max * 100;
+  return '<div class="pbar" role="img" aria-label="' + esc(t('projTitle')) + '">'
+    + '<div class="pbar-fill' + (actual >= target ? ' done' : '') + '" style="width:' + pc(actual) + '%"></div>'
+    + '<div class="pbar-proj" style="left:' + pc(actual) + '%;width:' + f1((mid - actual) / max * 100) + '%"></div>'
+    + '<div class="pbar-mark" style="left:' + f1(tm) + '%"></div></div>'
+    + '<div class="pbar-axis"><span>' + money(0) + '</span><span class="pbar-t' + (tm > 70 ? ' right' : '') + '" style="left:' + f1(tm) + '%">' + esc(t('tgtTargetMark', { a: money(target) })) + '</span></div>'
+    + '<div class="rng" aria-hidden="true"><i style="left:' + pc(lo) + '%;width:' + f1((hi - lo) / max * 100) + '%"></i><b style="left:' + pc(lo) + '%"></b><b style="left:' + pc(hi) + '%"></b><b style="left:' + pc(mid) + '%"></b></div>';
+}
+
+function projChart(p) {
+  const ms = p.ms, W = 680, H = 170, L = 56, R = 14, T = 12, B = 38, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
+  const add = ms.map((x, i) => i < p.oi ? 0 : i === p.oi ? p.avg * p.remainFrac : p.avg);
+  const gd = ms.map((x, i) => (x.total + add[i]) * rate());
+  const gmax = niceStep(Math.max(0, ...gd) / 4) * 4, bw = Math.min(46, st * 0.54);
+  let s = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - ph * k / 4;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + f1(y) + '" y2="' + f1(y) + '" class="gl"/>'
+      + '<text x="' + (L - 6) + '" y="' + f1(y + 3.5) + '" text-anchor="end" class="ax">' + compact(gmax * k / 4) + '</text>';
+  }
+  ms.forEach((x, i) => {
+    const cx = L + st * (i + 0.5), hA = x.total * rate() / gmax * ph, hP = add[i] * rate() / gmax * ph;
+    const tip = esc(mName(x.month) + ': ' + money(x.total) + (add[i] > 0 ? ' + ' + t('projShort') + ' ' + money(add[i]) : ''));
+    if (hA > 0) s += '<rect x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - hA) + '" width="' + f1(bw) + '" height="' + f1(hA) + '" rx="2" class="bar"><title>' + tip + '</title></rect>';
+    if (hP > 0) s += '<rect x="' + f1(cx - bw / 2) + '" y="' + f1(T + ph - hA - hP) + '" width="' + f1(bw) + '" height="' + f1(hP) + '" rx="2" class="bar og"><title>' + tip + '</title></rect>';
+    s += '<text x="' + f1(cx) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + mShort(x.month) + '</text>';
+    if (i === p.oi) s += '<text x="' + f1(cx) + '" y="' + (H - B + 26) + '" text-anchor="middle" class="ax og-t">' + esc(t('ongoing')) + '</text>';
+    else if (i > p.oi) s += '<text x="' + f1(cx) + '" y="' + (H - B + 26) + '" text-anchor="middle" class="ax og-t">' + esc(t('projShort')) + '</text>';
+  });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('projChartTitle')) + '" class="chart">' + s + '</svg>';
+}
+
+function tgtProjection(d, main, rows) {
+  const p = tgtProjCalc(d, main);
+  if (!p) return '<div class="card card-pad"><div class="card-title"><span>' + esc(t('projTitle')) + '</span></div><div class="h">' + esc(t('projNone')) + '</div></div>';
+  const yb = yearOf(d.labels.base, '2025');
+  const comm = rows.find(x => /commission|komisi/i.test(x.label));
+  const cRate = comm && main.actual > 0 ? comm.actual / main.actual : 0.05;
+  const [lo, mid, hi] = p.scen, reached = main.actual >= main.target;
+  const growth = main.base > 0 ? mid.total / main.base - 1 : null;
+  const note = reached
+    ? t('projReached', { a: money(mid.total - main.target) })
+    : (p.scen[1].pace >= p.need ? t('projNeedOk', { a: money(p.need), b: money(mid.pace) }) : t('projNeedGap', { a: money(p.need), b: money(mid.pace), x: pctFmt(p.need / mid.pace - 1) }));
+  const row = (cls, name, basis, s) => '<tr class="' + cls + '"><td>' + esc(t(name)) + '<small>' + esc(t(basis)) + '</small></td><td>' + money(s.pace) + '</td><td>' + money(s.total) + '</td><td>'
+    + esc(pctFmt(main.target > 0 ? s.total / main.target : 0)) + '</td><td>' + money(s.total * cRate) + '</td></tr>';
+
+  return '<div class="card card-pad">'
+    + '<div class="card-title"><span>' + esc(t('projTitle')) + '</span></div>'
+    + '<div class="tgt-top"><div><div class="h">' + esc(t('projExpected')) + '</div><span class="proj-big">' + money(mid.total) + '</span></div>'
+    + '<div class="tgt-nums"><span class="chip ' + (mid.total >= main.target ? 'ok' : 'warn') + '">' + esc(t('projOfTarget', { p: pctFmt(main.target > 0 ? mid.total / main.target : 0) })) + '</span>'
+    + (growth == null ? '' : '<span>' + esc(t('projVsLast', { g: signedPct(growth), y: yb })) + '</span>') + '</div></div>'
+    + projBar(main.actual, p, main.target)
+    + '<div class="h" style="margin-top:2px">' + esc(t('projRange', { a: money(lo.total), b: money(hi.total) })) + '</div>'
+    + '<div class="tgt-facts"><div><span>' + esc(t('projAvgDone')) + '</span><b>' + money(p.doneAvg) + '</b></div>'
+    + (p.runRate > 0 ? '<div><span>' + esc(t('projRun')) + '</span><b>' + money(p.runRate) + '</b></div>' : '') + '</div>'
+    + '<div class="h" style="margin:12px 0 4px">' + esc(note) + '</div>'
+    + '<div class="scroll"><table class="proj-tbl"><thead><tr><th>' + esc(t('projScen')) + '</th><th>' + esc(t('projPace')) + '</th><th>' + esc(t('projTotal')) + '</th><th>' + esc(t('projPct')) + '</th><th>' + esc(t('projComm')) + '</th></tr></thead><tbody>'
+    + row('', 'projLow', 'projLowBasis', lo) + row('mid', 'projMid', 'projMidBasis', mid) + row('', 'projHigh', 'projHighBasis', hi)
+    + '</tbody></table></div>'
+    + '<div class="card-title" style="margin:16px 0 0"><span>' + esc(t('projChartTitle')) + '</span></div>'
+    + '<div class="legend" style="padding:6px 0 0"><span><i style="background:var(--accent)"></i>' + esc(t('projActual')) + '</span><span><i style="background:var(--bar);border:1px dashed var(--accent)"></i>' + esc(t('projProjected')) + '</span></div>'
+    + projChart(p)
+    + '<div class="h">' + esc(t('projNote', { d: p.dim - p.elapsed, n: p.dim })) + '</div></div>';
 }
 
 /* ----- TAB 2: OVERALL GMV PER MONTH ----- */
