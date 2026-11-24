@@ -269,6 +269,31 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
 .logout{width:100%;font-size:13px}
 .chart .bar.bn{fill:var(--vid)}
 .bonus-tag{display:block;font-size:11px;font-weight:600;color:var(--vid)}
+.pbar{position:relative;height:16px;border-radius:999px;background:var(--bar);overflow:visible}
+.pbar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px 0 0 999px;background:var(--accent)}
+.pbar-fill.done{background:var(--up)}
+.pbar-over{position:absolute;top:0;bottom:0;border-radius:0 999px 999px 0;background:repeating-linear-gradient(45deg,#22a553,#22a553 6px,#4cc27a 6px,#4cc27a 12px)}
+.pbar-mark{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink)}
+.pbar-axis{position:relative;height:20px;margin-top:6px;font-size:12px;color:var(--muted)}
+.pbar-t{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-weight:600;color:var(--ink)}
+.pbar-t.right{transform:translateX(-100%)}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.chip.ok{background:var(--upbg);color:var(--up)}
+.chip.warn{background:var(--warnbg);color:var(--warn)}
+.tgt-top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;margin-bottom:16px}
+.tgt-pct{font-size:34px;font-weight:800;letter-spacing:-.02em;color:var(--accent-dark);line-height:1.1;display:inline-block;margin-right:10px}
+.tgt-nums b{font-size:20px}.tgt-nums span{color:var(--muted);font-size:13px;margin-left:6px}
+.tgt-facts{display:flex;flex-wrap:wrap;gap:8px 32px;margin-top:6px;padding-top:12px;border-top:1px solid var(--line)}
+.tgt-facts div span{display:block;font-size:12.5px;color:var(--muted)}.tgt-facts div b{font-size:16px}
+.tgt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 14px}
+.cmp{display:grid;grid-template-columns:110px 1fr auto;gap:8px;align-items:center;margin-top:8px;font-size:12.5px}
+.cmp-l{color:var(--muted)}
+.cmp-track{height:10px;border-radius:5px;background:#f6eeee}
+.cmp-bar{height:100%;border-radius:5px}
+.cmp-bar.base{background:#d9c7c7}
+.cmp-bar.tg{background:var(--bar);border:1px dashed var(--accent)}
+.cmp-bar.act{background:var(--accent)}
+.tgt-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
 </style>
 </head>
 <body>
@@ -300,6 +325,10 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
         <button id="tRev" class="nav-btn" onclick="setTab('rev')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           <span data-i18n="tabRev">Pendapatan</span>
+        </button>
+        <button id="tTgt" class="nav-btn" onclick="setTab('tgt')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+          <span data-i18n="tabTgt">Target</span>
         </button>
       </nav>
     </div>
@@ -398,6 +427,18 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
         </div>
         <div id="rOut"><div class="empty" data-i18n="loadingRev">Memuat data pendapatan…</div></div>
       </div>
+
+      <!-- TAB 5: TARGET TRACKER -->
+      <div id="vTgt" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 data-i18n="tgtTitle">Target Tracker</h2>
+            <div class="h" data-i18n="tgtSub">Pantau progress GMV tahun ini terhadap target dan performa tahun lalu.</div>
+          </div>
+          <button onclick="loadTarget(true)" data-i18n="btnRefresh">Muat Ulang</button>
+        </div>
+        <div id="tOut"><div class="empty" data-i18n="loadingTgt">Memuat data target…</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -423,6 +464,7 @@ async function run(fn, arg) {
   const p = new URLSearchParams();
   if (fn === 'findChannels') { p.set('action', 'find'); p.set('q', arg || ''); }
   else if (fn === 'getIndex') p.set('action', 'index');
+  else if (fn === 'getTarget') p.set('action', 'target');
   else p.set('action', 'revenue');
   const res = await fetch('/api/data?' + p.toString());
   if (res.status === 401) { showLogin(); throw new Error(t('loginNeeded')); }
@@ -497,6 +539,25 @@ const I18N = {
     upSub: 'Pantau jumlah unggahan video bulanan dan sorot kreator dengan upload < 4 video atau tepat 4 video per bulan.',
     btnRefreshData: 'Muat Ulang Data',
     btnRefresh: 'Muat Ulang',
+    tabTgt: 'Target',
+    tgtTitle: 'Target Tracker',
+    tgtSub: 'Pantau progress GMV tahun ini terhadap target dan performa tahun lalu.',
+    loadingTgt: 'Memuat data target…',
+    tgtEmpty: 'Data target tidak ditemukan di sheet Target Tracker.',
+    tgtHero: 'Progress Target GMV {y}',
+    tgtAchieved: 'Target tercapai',
+    tgtOnTrack: 'Menuju target',
+    tgtOf: 'dari target {a}',
+    tgtTargetMark: 'Target {a}',
+    tgtRemaining: 'Sisa menuju target',
+    tgtAbove: 'Melebihi target',
+    tgtGrowth: 'Pertumbuhan vs {y}',
+    tgtBarBase: 'Tahun lalu ({y})',
+    tgtBarTarget: 'Target {y}',
+    tgtBarActual: 'Aktual {y}',
+    tgtMetricComm: 'Komisi MCN 5%',
+    tgtMetricAvg: 'Rata-rata GMV per Bulan',
+    tgtSource: 'Sumber: sheet Target Tracker.',
     loadingGmv: 'Memuat data GMV…',
     loadingUp: 'Memuat data unggahan…',
     loadingRev: 'Memuat data pendapatan…',
@@ -630,6 +691,25 @@ const I18N = {
     upSub: 'Track monthly video upload volume and highlight creators uploading < 4 videos or exactly 4 videos per month.',
     btnRefreshData: 'Refresh Data',
     btnRefresh: 'Refresh',
+    tabTgt: 'Target',
+    tgtTitle: 'Target Tracker',
+    tgtSub: 'Track this year\'s GMV progress against the target and last year\'s performance.',
+    loadingTgt: 'Loading target data…',
+    tgtEmpty: 'No target data found in the Target Tracker sheet.',
+    tgtHero: 'GMV Target Progress {y}',
+    tgtAchieved: 'Target achieved',
+    tgtOnTrack: 'In progress',
+    tgtOf: 'of target {a}',
+    tgtTargetMark: 'Target {a}',
+    tgtRemaining: 'Remaining to target',
+    tgtAbove: 'Above target',
+    tgtGrowth: 'Growth vs {y}',
+    tgtBarBase: 'Last year ({y})',
+    tgtBarTarget: 'Target {y}',
+    tgtBarActual: 'Actual {y}',
+    tgtMetricComm: '5% MCN Commission',
+    tgtMetricAvg: 'Avg. Monthly GMV',
+    tgtSource: 'Source: Target Tracker sheet.',
     loadingGmv: 'Loading GMV data…',
     loadingUp: 'Loading upload data…',
     loadingRev: 'Loading revenue data…',
@@ -803,7 +883,7 @@ function fallbackCopy(val, cb) {
 
 /* Exchange Rate Helpers */
 const baseFx = () => {
-  const x = S.rev || S.r;
+  const x = S.rev || S.r || S.tgt;
   return (x && x.fx) ? x.fx : 18000;
 };
 const activeFx = () => S.customFx || baseFx();
@@ -821,6 +901,7 @@ function rerenderAll() {
   gmvRender();
   upRender();
   revRender();
+  tgtRender();
 }
 
 function applyFx() {
@@ -887,11 +968,14 @@ function setTab(tab) {
   $('tGmv').classList.toggle('on', tab === 'gmv');
   $('tUp').classList.toggle('on', tab === 'up');
   $('tRev').classList.toggle('on', tab === 'rev');
+  $('tTgt').classList.toggle('on', tab === 'tgt');
   $('vFind').classList.toggle('hidden', tab !== 'find');
   $('vGmv').classList.toggle('hidden', tab !== 'gmv');
   $('vUp').classList.toggle('hidden', tab !== 'up');
   $('vRev').classList.toggle('hidden', tab !== 'rev');
+  $('vTgt').classList.toggle('hidden', tab !== 'tgt');
   if ((tab === 'gmv' || tab === 'up' || tab === 'rev') && !S.rev) loadData();
+  if (tab === 'tgt') loadTarget();
 }
 
 function setCur(c) {
@@ -928,6 +1012,72 @@ async function loadData(force) {
   gmvRender();
   upRender();
   revRender();
+}
+
+/* ----- TAB 5: TARGET TRACKER ----- */
+const pctFmt = x => new Intl.NumberFormat(S.lang === 'id' ? 'id-ID' : 'en-US', {maximumFractionDigits: 2}).format(x * 100) + '%';
+const signedPct = x => (x >= 0 ? '+' : '') + pctFmt(x);
+const yearOf = (label, fb) => { const m = String(label || '').match(/\d{4}/); return m ? m[0] : fb; };
+
+async function loadTarget(force) {
+  if (!force && S.tgt) { tgtRender(); return; }
+  $('tOut').innerHTML = '<div class="empty">' + esc(t('loadingTgt')) + '</div>';
+  try {
+    S.tgt = await run('getTarget');
+    syncFxUI();
+    applyStaticLang();
+    tgtRender();
+  } catch (e) {
+    $('tOut').innerHTML = '<div class="miss">' + esc(e.message || e) + '</div>';
+  }
+}
+
+function progressBar(ratio, targetValue) {
+  const max = Math.max(1, ratio), mark = 100 / max;
+  const fill = Math.min(ratio, 1) / max * 100, over = Math.max(ratio - 1, 0) / max * 100;
+  return '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="' + Math.max(100, Math.round(ratio * 100)) + '" aria-valuenow="' + Math.round(ratio * 100) + '" aria-label="' + esc(pctFmt(ratio)) + '">'
+    + '<div class="pbar-fill' + (ratio >= 1 ? ' done' : '') + '" style="width:' + f1(fill) + '%"></div>'
+    + (over > 0 ? '<div class="pbar-over" style="left:' + f1(mark) + '%;width:' + f1(over) + '%"></div>' : '')
+    + '<div class="pbar-mark" style="left:' + f1(mark) + '%"></div></div>'
+    + '<div class="pbar-axis"><span>' + money(0) + '</span><span class="pbar-t' + (mark > 70 ? ' right' : '') + '" style="left:' + f1(mark) + '%">' + esc(t('tgtTargetMark', { a: money(targetValue) })) + '</span></div>';
+}
+
+function tgtRender() {
+  const d = S.tgt, el = $('tOut');
+  if (!d) return;
+  if (!d.rows || !d.rows.length) { el.innerHTML = '<div class="empty">' + esc(t('tgtEmpty')) + '</div>'; return; }
+  const yb = yearOf(d.labels.base, '2025'), ya = yearOf(d.labels.actual, '2026'), yt = yearOf(d.labels.target, ya);
+  const main = d.rows.find(x => /total/i.test(x.label) && /gmv/i.test(x.label)) || d.rows[0];
+  const ratio = x => x.target > 0 ? x.actual / x.target : 0;
+  const growth = x => x.base > 0 ? x.actual / x.base - 1 : null;
+  const name = x => /commission|komisi/i.test(x.label) ? t('tgtMetricComm') : /avg|average|rata/i.test(x.label) ? t('tgtMetricAvg') : x.label;
+  const gClass = g => g == null ? 'none' : g >= 0 ? 'up' : 'down';
+  const gText = g => g == null ? '—' : signedPct(g);
+
+  const r0 = ratio(main), done = r0 >= 1, g0 = growth(main);
+  const hero = '<div class="card card-pad">'
+    + '<div class="tgt-top"><div><div class="h">' + esc(t('tgtHero', { y: yt })) + '</div>'
+    + '<span class="tgt-pct">' + esc(pctFmt(r0)) + '</span><span class="chip ' + (done ? 'ok' : 'warn') + '">' + esc(t(done ? 'tgtAchieved' : 'tgtOnTrack')) + '</span></div>'
+    + '<div class="tgt-nums"><b>' + money(main.actual) + '</b><span>' + esc(t('tgtOf', { a: money(main.target) })) + '</span></div></div>'
+    + progressBar(r0, main.target)
+    + '<div class="tgt-facts">'
+    + '<div><span>' + esc(t(done ? 'tgtAbove' : 'tgtRemaining')) + '</span><b class="' + (done ? 'up' : '') + '">' + money(Math.abs(main.actual - main.target)) + '</b></div>'
+    + '<div><span>' + esc(t('tgtGrowth', { y: yb })) + '</span><b class="' + gClass(g0) + '">' + gText(g0) + '</b></div>'
+    + '</div></div>';
+
+  const cmp = (x) => {
+    const max = Math.max(x.base, x.target, x.actual, 1);
+    const row = (lbl, v, cls) => '<div class="cmp"><span class="cmp-l">' + esc(lbl) + '</span><div class="cmp-track"><div class="cmp-bar ' + cls + '" style="width:' + f1(v / max * 100) + '%"></div></div><b>' + money(v) + '</b></div>';
+    return row(t('tgtBarBase', { y: yb }), x.base, 'base') + row(t('tgtBarTarget', { y: yt }), x.target, 'tg') + row(t('tgtBarActual', { y: ya }), x.actual, 'act');
+  };
+  const cards = d.rows.map(x => {
+    const r = ratio(x), g = growth(x);
+    return '<div class="card card-pad"><div class="card-title"><span>' + esc(name(x)) + '</span><span class="chip ' + (r >= 1 ? 'ok' : 'warn') + '">' + esc(pctFmt(r)) + '</span></div>'
+      + progressBar(r, x.target) + cmp(x)
+      + '<div class="tgt-foot"><span>' + esc(t('tgtGrowth', { y: yb })) + '</span><b class="' + gClass(g) + '">' + gText(g) + '</b></div></div>';
+  }).join('');
+
+  el.innerHTML = hero + '<div class="tgt-grid">' + cards + '</div><div class="h">' + esc(t('tgtSource')) + '</div>';
 }
 
 /* ----- TAB 2: OVERALL GMV PER MONTH ----- */
@@ -1703,6 +1853,7 @@ $('q').addEventListener('keydown', e => {
   if (p.lang === 'en') setLang('en');
   if (p.page === 'revenue') setTab('rev');
   else if (p.page === 'gmv') setTab('gmv');
+  else if (p.page === 'target') setTab('tgt');
   else if (p.page === 'uploads' || p.page === 'konten') setTab('up');
   if (p.id) { $('q').value = p.id; find(p.id); }
 })();
