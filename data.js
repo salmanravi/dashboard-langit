@@ -10,6 +10,7 @@ import crypto from 'crypto';
 
 const MAX_AGE = 60 * 60 * 12; // stay signed in for 12 hours
 const ACTIONS = ['find', 'index', 'revenue', 'target'];
+const VERSION = '2026-11-24-target'; // open /api/data?action=ping to see which version is live
 
 const sha = s => crypto.createHash('sha256').update(String(s)).digest();
 const same = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
@@ -60,11 +61,18 @@ export default async function handler(req, res) {
 async function handle(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const env = process.env;
+  const q = req.query || {};
+  if (q.action === 'ping') { // no login needed; shows only the version and which variables exist
+    return res.status(200).json({
+      version: VERSION,
+      actions: ACTIONS,
+      configured: { SESSION_SECRET: !!env.SESSION_SECRET, APPS_SCRIPT_URL: !!env.APPS_SCRIPT_URL, APPS_SCRIPT_KEY: !!env.APPS_SCRIPT_KEY }
+    });
+  }
   const missing = ['SESSION_SECRET', 'APPS_SCRIPT_URL', 'APPS_SCRIPT_KEY'].filter(k => !env[k]);
   if (missing.length) {
     return res.status(500).json({ error: 'Environment variable belum diatur di Vercel: ' + missing.join(', ') });
   }
-  const q = req.query || {};
   const action = q.action || '';
 
   if (action === 'login') {
@@ -91,7 +99,7 @@ async function handle(req, res) {
 
   const session = readToken(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
-  if (ACTIONS.indexOf(action) < 0) return res.status(400).json({ error: 'Unknown action' });
+  if (ACTIONS.indexOf(action) < 0) return res.status(400).json({ error: 'Unknown action: ' + action + ' (api/data.js versi ' + VERSION + ', aksi yang dikenal: ' + ACTIONS.join(', ') + ')' });
 
   const url = new URL(env.APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
