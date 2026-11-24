@@ -1,16 +1,8 @@
-/**
- * /api/data  –  login, logout and a protected proxy to the Apps Script backend.
- * Accounts live in the USERS sheet (checked by Apps Script), not here.
- * Environment variables (Vercel > Project > Settings > Environment Variables):
- *   SESSION_SECRET    long random string used to sign the login cookie
- *   APPS_SCRIPT_URL   your Apps Script web app URL (ends in /exec)
- *   APPS_SCRIPT_KEY   same value as API_KEY in Apps Script > Script properties
- */
 import crypto from 'crypto';
 
-const MAX_AGE = 60 * 60 * 12; // stay signed in for 12 hours
-const ACTIONS = ['find', 'index', 'revenue', 'target'];
-const VERSION = '2026-11-24-target'; // open /api/data?action=ping to see which version is live
+const MAX_AGE = 60 * 60 * 12;
+const ACTIONS = ['find', 'index', 'revenue', 'target', 'samples'];
+const VERSION = '2026-11-24-samples';
 
 const sha = s => crypto.createHash('sha256').update(String(s)).digest();
 const same = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
@@ -62,7 +54,7 @@ async function handle(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const env = process.env;
   const q = req.query || {};
-  if (q.action === 'ping') { // no login needed; shows only the version and which variables exist
+  if (q.action === 'ping') {
     return res.status(200).json({
       version: VERSION,
       actions: ACTIONS,
@@ -85,7 +77,7 @@ async function handle(req, res) {
     }
     if (r && r.error) return res.status(502).json({ error: r.error });
     if (!r || !r.ok) {
-      await new Promise(x => setTimeout(x, 800)); // slows down password guessing
+      await new Promise(x => setTimeout(x, 800));
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     res.setHeader('Set-Cookie', cookie(makeToken(r.user), MAX_AGE));
@@ -99,7 +91,7 @@ async function handle(req, res) {
 
   const session = readToken(req);
   if (!session) return res.status(401).json({ error: 'Unauthorized' });
-  if (ACTIONS.indexOf(action) < 0) return res.status(400).json({ error: 'Unknown action: ' + action + ' (api/data.js versi ' + VERSION + ', aksi yang dikenal: ' + ACTIONS.join(', ') + ')' });
+  if (ACTIONS.indexOf(action) < 0) return res.status(400).json({ error: 'Unknown action: ' + action });
 
   const url = new URL(env.APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
@@ -111,7 +103,7 @@ async function handle(req, res) {
     const text = await r.text();
     let data;
     try { data = JSON.parse(text); } catch (e) { throw new Error('Respons backend tidak valid.'); }
-    if (data && data.error === 'Unauthorized') { // removed from the USERS sheet
+    if (data && data.error === 'Unauthorized') {
       res.setHeader('Set-Cookie', cookie('', 0));
       return res.status(401).json({ error: 'Unauthorized' });
     }
