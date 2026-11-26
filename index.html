@@ -91,7 +91,7 @@ button.primary:hover{background:var(--accent-dark)}
 .fx-tag{font-size:10px;padding:1px 6px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-weight:700;text-transform:none}
 
 .main{flex:1;margin-left:var(--sidebar-w);min-width:0}
-.wrap{max-width:1040px;margin:0 auto;padding:22px 20px 60px}
+.wrap{max-width:1020px;margin:0 auto;padding:22px 20px 60px}
 
 /* Mobile Header & Drawer */
 .mob-bar{
@@ -151,7 +151,6 @@ h2{margin:0 0 2px;font-size:20px;letter-spacing:-.01em}
 .badge-under{background:var(--downbg);color:var(--down)}
 .badge-exact{background:var(--warnbg);color:var(--warn)}
 .badge-over{background:var(--upbg);color:var(--up)}
-.badge-muted{background:#f1f5f9;color:#475569}
 
 tr.hl-under td{background:#fff8f8}
 tr.hl-exact td{background:#fffdf5}
@@ -184,15 +183,6 @@ tr.hl-exact:hover td{background:#fef3c7!important}
 .copy-pill:hover{background:var(--bar);border-color:var(--accent)}
 .copy-pill.copied{background:var(--upbg);border-color:#86efac;color:var(--up)}
 .copy-pill svg{width:13px;height:13px;flex-shrink:0}
-
-/* SOW Video Link Pill */
-.sow-links{display:inline-flex;flex-wrap:wrap;gap:4px}
-.sow-pill{
-  display:inline-block;padding:2px 7px;border-radius:5px;
-  font-size:11.5px;font-weight:600;text-decoration:none;
-  background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
-}
-.sow-pill:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 .flag{margin:0 18px 12px;padding:8px 12px;border-radius:6px;background:var(--warnbg);color:var(--warn);font-size:14px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -256,7 +246,7 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
 .tot td{font-weight:700;border-top:2px solid var(--line)}
 .foot{padding:10px 18px 14px;color:var(--muted);font-size:13px}
 .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
-#rq,#gq,#uq,#sq{border:1px solid var(--line);border-radius:6px;padding:7px 10px;background:var(--surface);width:230px;max-width:100%}
+#rq,#gq,#uq{border:1px solid var(--line);border-radius:6px;padding:7px 10px;background:var(--surface);width:230px;max-width:100%}
 .chk{font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
 .rt th[data-sort]{cursor:pointer;user-select:none}
 .rt th:first-child,.rt td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
@@ -314,16 +304,29 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
 .proj-tbl th:first-child,.proj-tbl td:first-child{text-align:left;white-space:normal}
 .proj-tbl tr.mid td{background:var(--accent-soft);font-weight:700}
 .proj-tbl small{display:block;color:var(--muted);font-weight:400;font-size:12px}
-.prod-cell{max-width:260px;white-space:normal;line-height:1.35;font-size:13px}
-.prod-cell a{color:var(--ink);text-decoration:none;font-weight:500}
-.prod-cell a:hover{color:var(--accent);text-decoration:underline}
+.quota-bar.five{grid-template-columns:repeat(5,1fr)}
+@media(max-width:900px){.quota-bar.five{grid-template-columns:repeat(2,1fr)}}
+.pt{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;padding:0 6px;border-radius:6px;font-weight:700;font-size:13px}
+.pt-under{background:var(--downbg);color:var(--down)}
+.pt-exact{background:var(--warnbg);color:var(--warn)}
+.pt-over{background:var(--upbg);color:var(--up)}
+.pt-og{outline:2px dashed currentColor;outline-offset:-2px}
+.pat-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 12px;font-size:12.5px;color:var(--muted);align-items:center}
+.pat-legend span{display:inline-flex;align-items:center;gap:6px}
+.pat-tbl th,.pat-tbl td{text-align:center}
+.pat-tbl th:first-child,.pat-tbl td:first-child,.pat-tbl th:last-child,.pat-tbl td:last-child{text-align:left}
+.sdots{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.sd{width:9px;height:9px;border-radius:50%;background:#e6d8d8;display:inline-block}
+.sd.on{background:var(--up)}
+.badge-none{background:#f1e9e9;color:var(--muted)}
+.pat-sub{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;white-space:normal}
 </style>
 </head>
 <body>
 <div class="layout">
   <div id="backdrop" class="backdrop" onclick="toggleSidebar(false)"></div>
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR (MAIN TAB GROUP) -->
   <aside id="sidebar" class="sidebar" aria-label="Main Navigation">
     <div>
       <div class="brand">
@@ -349,10 +352,6 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           <span data-i18n="tabRev">Pendapatan</span>
         </button>
-        <button id="tSmp" class="nav-btn" onclick="setTab('smp')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          <span data-i18n="tabSmp">Free Sample</span>
-        </button>
         <button id="tTgt" class="nav-btn" onclick="setTab('tgt')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
           <span data-i18n="tabTgt">Target</span>
@@ -377,6 +376,7 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
         </div>
       </div>
 
+      <!-- EXCHANGE RATE SWITCHER MENU -->
       <div class="sb-ctrl-row">
         <span class="sb-ctrl-lbl">
           <span data-i18n="lblFx">Kurs (1 USD)</span>
@@ -408,7 +408,7 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
       <div id="vFind">
         <div style="margin-bottom:14px">
           <h2 data-i18n="tabFind">Cari Kreator</h2>
-          <div class="h" data-i18n="findSub">Cari performa penjualan GMV, pendapatan 5% ke agency, jumlah unggahan video, dan riwayat free sample per kreator.</div>
+          <div class="h" data-i18n="findSub">Cari performa penjualan GMV, pendapatan 5% ke agency, dan jumlah unggahan video per kreator.</div>
         </div>
         <div class="find">
           <div class="box"><textarea id="q" rows="2" placeholder="Ketik username, atau tempel Channel ID / tautan. Bisa masukkan beberapa sekaligus." aria-label="Channel ID, username atau tautan" role="combobox" aria-controls="sug" aria-autocomplete="list" aria-expanded="false" autocomplete="off"></textarea><div id="sug" class="sug" role="listbox" hidden></div></div>
@@ -454,19 +454,7 @@ tr.link{cursor:pointer}tr.link:hover td{background:#fdf2f2}
         <div id="rOut"><div class="empty" data-i18n="loadingRev">Memuat data pendapatan…</div></div>
       </div>
 
-      <!-- TAB 5: FREE SAMPLE & SOW TRACKER -->
-      <div id="vSmp" class="hidden">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-          <div>
-            <h2 data-i18n="smpTitle">Monitoring Free Sample & SOW</h2>
-            <div class="h" data-i18n="smpSub">Pantau penggunaan anggaran sampel bulanan, status pengiriman, dan kepatuhan upload video SOW kreator.</div>
-          </div>
-          <button onclick="loadSamples(true)" data-i18n="btnRefresh">Muat Ulang</button>
-        </div>
-        <div id="sOut"><div class="empty" data-i18n="loadingSmp">Memuat data free sample…</div></div>
-      </div>
-
-      <!-- TAB 6: TARGET TRACKER -->
+      <!-- TAB 5: TARGET TRACKER -->
       <div id="vTgt" class="hidden">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
           <div>
@@ -503,7 +491,6 @@ async function run(fn, arg) {
   if (fn === 'findChannels') { p.set('action', 'find'); p.set('q', arg || ''); }
   else if (fn === 'getIndex') p.set('action', 'index');
   else if (fn === 'getTarget') p.set('action', 'target');
-  else if (fn === 'getSamples') p.set('action', 'samples');
   else p.set('action', 'revenue');
   const res = await fetch('/api/data?' + p.toString());
   if (res.status === 401) { showLogin(); throw new Error(t('loginNeeded')); }
@@ -543,7 +530,7 @@ async function logout() {
   location.reload();
 }
 
-/* ----- DICTIONARY ----- */
+/* ----- DICTIONARY (ID DEFAULT, EN SECONDARY) ----- */
 const I18N = {
   id: {
     appTitle: 'YouTube Performance',
@@ -565,34 +552,10 @@ const I18N = {
     fxCustom: 'Kustom',
     btnApply: 'OK',
     tabFind: 'Cari Kreator',
-    findSub: 'Cari performa penjualan GMV, pendapatan 5% ke agency, jumlah unggahan video, dan riwayat free sample per kreator.',
+    findSub: 'Cari performa penjualan GMV, pendapatan 5% ke agency, dan jumlah unggahan video per kreator.',
     tabGmv: 'Total GMV',
     tabUp: 'Monitoring Upload',
     tabRev: 'Pendapatan',
-    tabSmp: 'Free Sample',
-    smpTitle: 'Monitoring Free Sample & SOW',
-    smpSub: 'Pantau penggunaan anggaran sampel bulanan, status pengiriman, dan kepatuhan upload video SOW kreator.',
-    loadingSmp: 'Memuat data free sample…',
-    smpBudgetCard: 'Budget Bulanan',
-    smpExhaustedCard: 'Budget Terpakai (Aktual)',
-    smpRemainingCard: 'Sisa Budget',
-    smpSowRateCard: 'Kepatuhan SOW (Delivered)',
-    smpAllItems: 'Semua Pengajuan',
-    smpAllSub: 'Total pengajuan di periode ini',
-    smpMissingSow: 'Delivered - Belum SOW',
-    smpMissingSowSub: 'Perlu follow-up video SOW',
-    smpDoneSow: 'SOW Selesai',
-    smpDoneSowSub: 'Minimal 1 link video tayang',
-    smpOtherStatus: 'Pending / Tidak ACC',
-    smpOtherSub: 'Belum dikirim atau ditolak',
-    smpProduct: 'Produk Sampel',
-    smpActualPrice: 'Harga Aktual',
-    smpShipStatus: 'Pengiriman',
-    smpSowLinks: 'Link Video SOW',
-    smpNoSow: 'Belum ada SOW',
-    smpCreatorHistory: 'Riwayat Free Sample & SOW',
-    smpActualSpent: 'Realisasi sampel aktual',
-    smpNoHistory: 'Kreator ini belum memiliki riwayat pengajuan free sample.',
     searchPlaceholder: 'Ketik username, atau tempel Channel ID / tautan. Bisa masukkan beberapa sekaligus.',
     btnFind: 'Cari',
     urlHint: 'Buka aplikasi dengan <b>?id=UC…</b> di akhir tautan untuk melihat kreator secara langsung.',
@@ -729,6 +692,8 @@ const I18N = {
     flagDrop: 'GMV turun {p}% dibandingkan bulan {pm}.',
     noteCol: 'Catatan',
     revTrendTitle: 'Tren Pendapatan Bulanan',
+
+    /* Upload Monitor Specific */
     qAll: 'Semua Kreator',
     qAllSub: 'Total kreator terdaftar',
     qUnder4: 'Upload < 4 Video',
@@ -737,6 +702,33 @@ const I18N = {
     qExact4Sub: 'Batas minimum (4 video/bln)',
     qOver4: 'Upload > 4 Video',
     qOver4Sub: 'Target terlampaui (5+ video/bln)',
+    upViewSummary: 'Ringkasan Bulanan',
+    upViewPattern: 'Pola Upload',
+    patAll: 'Semua kreator',
+    patAllSub: 'Kreator yang ditampilkan',
+    patDone: 'Sudah {k} bulan berturut-turut',
+    patDoneSub: 'Memenuhi syarat upload',
+    patNeed: 'Butuh {n} bulan lagi',
+    patNeedSub: 'Sudah {c} dari {k} bulan',
+    patNone: 'Belum ada streak',
+    patNoneSub: 'Belum mulai atau terputus',
+    patLegUnder: '< {n} video',
+    patLegExact: '= {n} video (pas batas)',
+    patLegOver: '> {n} video',
+    patLegOngoing: 'Bulan berjalan (belum final)',
+    patTitle: 'Pola Upload per Bulan',
+    patRule: 'Syarat: minimal {n} video per bulan selama {k} bulan berturut-turut.',
+    patStreak: 'Streak saat ini',
+    patStatus: 'Status',
+    patBadgeDone: 'Tercapai',
+    patBadgeProv: 'Tercapai sementara',
+    patBadgeNeed: 'Butuh {n} bulan lagi',
+    patBadgeNone: 'Belum ada streak',
+    patDoneRange: 'Periode: {a} – {b}',
+    patProvNote: 'Menunggu {m} selesai',
+    patPending: '{m} berjalan: {a}/{b} video',
+    patHideIdle: 'Sembunyikan kreator tanpa upload',
+    patMonthsShort: 'bln',
     upTrendTitle: 'Tren Total Unggahan Video Bulanan',
     upTableTitle: 'Daftar Monitoring Upload Kreator',
     statusQuota: 'Status Kuota',
@@ -766,34 +758,10 @@ const I18N = {
     fxCustom: 'Custom',
     btnApply: 'OK',
     tabFind: 'Creator Lookup',
-    findSub: 'Search GMV sales performance, 5% agency revenue, video upload counts, and free sample history per creator.',
+    findSub: 'Search GMV sales performance, 5% agency revenue, and video upload counts per creator.',
     tabGmv: 'Overall GMV',
     tabUp: 'Upload Monitor',
     tabRev: 'Revenue',
-    tabSmp: 'Free Sample',
-    smpTitle: 'Free Sample & SOW Monitor',
-    smpSub: 'Track monthly sample budget utilization, delivery status, and creator SOW video compliance.',
-    loadingSmp: 'Loading free sample data…',
-    smpBudgetCard: 'Monthly Budget',
-    smpExhaustedCard: 'Budget Exhausted (Actual)',
-    smpRemainingCard: 'Remaining Budget',
-    smpSowRateCard: 'SOW Compliance (Delivered)',
-    smpAllItems: 'All Requests',
-    smpAllSub: 'Total submissions in period',
-    smpMissingSow: 'Delivered - Missing SOW',
-    smpMissingSowSub: 'Needs SOW video follow-up',
-    smpDoneSow: 'SOW Completed',
-    smpDoneSowSub: 'At least 1 video link submitted',
-    smpOtherStatus: 'Pending / Rejected',
-    smpOtherSub: 'Not shipped or declined',
-    smpProduct: 'Sample Product',
-    smpActualPrice: 'Actual Price',
-    smpShipStatus: 'Shipping',
-    smpSowLinks: 'SOW Video Links',
-    smpNoSow: 'Missing SOW',
-    smpCreatorHistory: 'Free Sample & SOW History',
-    smpActualSpent: 'Actual sample cost',
-    smpNoHistory: 'This creator has no free sample submission history yet.',
     searchPlaceholder: 'Type a username, or paste a channel ID or link. Add several to compare.',
     btnFind: 'Find',
     urlHint: 'Open the app with <b>?id=UC…</b> at the end of its link to look up a channel directly.',
@@ -930,6 +898,8 @@ const I18N = {
     flagDrop: 'GMV is down {p}% compared with {pm}.',
     noteCol: 'Note',
     revTrendTitle: 'Monthly Revenue Trend',
+
+    /* Upload Monitor Specific */
     qAll: 'All Creators',
     qAllSub: 'Total tracked creators',
     qUnder4: 'Upload < 4 Videos',
@@ -938,6 +908,33 @@ const I18N = {
     qExact4Sub: 'Minimum threshold (4 videos/mo)',
     qOver4: 'Upload > 4 Videos',
     qOver4Sub: 'Above target (5+ videos/mo)',
+    upViewSummary: 'Monthly Summary',
+    upViewPattern: 'Upload Pattern',
+    patAll: 'All creators',
+    patAllSub: 'Creators shown',
+    patDone: '{k} months in a row done',
+    patDoneSub: 'Meets the upload requirement',
+    patNeed: '{n} more month(s) to go',
+    patNeedSub: '{c} of {k} months so far',
+    patNone: 'No streak yet',
+    patNoneSub: 'Not started or broken',
+    patLegUnder: '< {n} videos',
+    patLegExact: '= {n} videos (right at the limit)',
+    patLegOver: '> {n} videos',
+    patLegOngoing: 'Running month (not final)',
+    patTitle: 'Upload Pattern by Month',
+    patRule: 'Requirement: at least {n} videos per month for {k} consecutive months.',
+    patStreak: 'Current streak',
+    patStatus: 'Status',
+    patBadgeDone: 'Achieved',
+    patBadgeProv: 'Achieved (provisional)',
+    patBadgeNeed: '{n} more month(s) to go',
+    patBadgeNone: 'No streak yet',
+    patDoneRange: 'Period: {a} – {b}',
+    patProvNote: 'Waiting for {m} to finish',
+    patPending: '{m} running: {a}/{b} videos',
+    patHideIdle: 'Hide creators with no uploads',
+    patMonthsShort: 'mo',
     upTrendTitle: 'Monthly Total Video Upload Trend',
     upTableTitle: 'Creator Upload Monitoring List',
     statusQuota: 'Quota Status',
@@ -956,21 +953,21 @@ const MONTH_ID = {
 };
 
 let S = {
-  lang: 'id',
+  lang: 'id', // Indonesian default
   r: null,
   cur: 'USD',
-  customFx: null,
+  customFx: null, // User-overridden exchange rate (null = use spreadsheet FX)
   tab: 'find',
   rev: null,
-  smp: null,
-  smpMonth: 'ALL',
-  smpFilter: 'ALL',
-  sq: '',
   creatorMonth: 'ALL',
   gmvMonth: 'ALL',
   upMonth: 'LATEST',
   upFilter: 'ALL',
   uq: '',
+  upView: 'sum',
+  patFilter: 'ALL',
+  pq: '',
+  patHide: true,
   revMonth: 'ALL',
   gq: '',
   rsort: 'total',
@@ -1022,8 +1019,9 @@ function fallbackCopy(val, cb) {
   cb();
 }
 
+/* Exchange Rate Helpers */
 const baseFx = () => {
-  const x = S.rev || S.r || S.tgt || S.smp;
+  const x = S.rev || S.r || S.tgt;
   return (x && x.fx) ? x.fx : 18000;
 };
 const activeFx = () => S.customFx || baseFx();
@@ -1041,7 +1039,6 @@ function rerenderAll() {
   gmvRender();
   upRender();
   revRender();
-  smpRender();
   tgtRender();
 }
 
@@ -1109,16 +1106,13 @@ function setTab(tab) {
   $('tGmv').classList.toggle('on', tab === 'gmv');
   $('tUp').classList.toggle('on', tab === 'up');
   $('tRev').classList.toggle('on', tab === 'rev');
-  $('tSmp').classList.toggle('on', tab === 'smp');
   $('tTgt').classList.toggle('on', tab === 'tgt');
   $('vFind').classList.toggle('hidden', tab !== 'find');
   $('vGmv').classList.toggle('hidden', tab !== 'gmv');
   $('vUp').classList.toggle('hidden', tab !== 'up');
   $('vRev').classList.toggle('hidden', tab !== 'rev');
-  $('vSmp').classList.toggle('hidden', tab !== 'smp');
   $('vTgt').classList.toggle('hidden', tab !== 'tgt');
   if ((tab === 'gmv' || tab === 'up' || tab === 'rev') && !S.rev) loadData();
-  if (tab === 'smp') loadSamples();
   if (tab === 'tgt') loadTarget();
 }
 
@@ -1135,7 +1129,7 @@ function niceStep(x) {
   return [1, 2, 2.5, 5, 10].find(k => k >= n - 1e-9) * p;
 }
 
-/* ----- SHARED DATA LOADER ----- */
+/* ----- SHARED DATA LOADER (GMV, UPLOAD MONITOR & REVENUE) ----- */
 async function loadData(force) {
   if (force || !S.rev) {
     $('gOut').innerHTML = '<div class="empty">' + esc(t('loadingGmv')) + '</div>';
@@ -1158,162 +1152,7 @@ async function loadData(force) {
   revRender();
 }
 
-/* ----- TAB 5: FREE SAMPLE & SOW MONITOR ----- */
-async function loadSamples(force) {
-  if (!force && S.smp) { smpRender(); return; }
-  $('sOut').innerHTML = '<div class="empty">' + esc(t('loadingSmp')) + '</div>';
-  try {
-    S.smp = await run('getSamples');
-    syncFxUI();
-    smpRender();
-  } catch (e) {
-    $('sOut').innerHTML = '<div class="miss">' + esc(e.message || e) + '</div>';
-  }
-}
-
-function setSmpMonth(m) { S.smpMonth = m; smpRender(); }
-function setSmpFilter(f) { S.smpFilter = f; smpRender(); }
-
-function smpClassify(item) {
-  const isDelivered = /delivered/i.test(item.shipping);
-  const isAcc = /^yes/i.test(item.acc);
-  if (item.sows && item.sows.length > 0) return 'DONE';
-  if (isDelivered && isAcc) return 'MISSING';
-  return 'OTHER';
-}
-
-function sowLinksHtml(sows, shipping, acc) {
-  if (sows && sows.length) {
-    return '<div class="sow-links">' + sows.map((u, idx) => {
-      const safe = /^https?:\/\//i.test(u) ? u : '';
-      return safe
-        ? '<a class="sow-pill" href="' + esc(safe) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">SOW ' + (idx + 1) + '</a>'
-        : '<span class="badge badge-over">SOW ' + (idx + 1) + '</span>';
-    }).join('') + '</div>';
-  }
-  if (/delivered/i.test(shipping) && /^yes/i.test(acc)) {
-    return '<span class="badge badge-under">' + esc(t('smpNoSow')) + '</span>';
-  }
-  return '<span class="none">—</span>';
-}
-
-function smpRender() {
-  const d = S.smp, el = $('sOut');
-  if (!d) return;
-  const wasFocused = document.activeElement && document.activeElement.id === 'sq';
-  const cursorPos = wasFocused ? document.activeElement.selectionStart : 0;
-
-  const ms = d.months || ['September', 'October', 'November', 'December'];
-  const sel = S.smpMonth;
-
-  // Hitung ringkasan anggaran dari tab September - December
-  const activeTabs = sel === 'ALL' ? ms : [sel];
-  let sumBudget = 0, sumExhausted = 0, sumRemaining = 0, budgetNote = '';
-  activeTabs.forEach(m => {
-    const b = d.budgets && d.budgets[m];
-    if (b) {
-      sumBudget += b.budget || 0;
-      sumExhausted += b.exhausted || 0;
-      sumRemaining += b.remaining || 0;
-      if (sel !== 'ALL' && b.note) budgetNote = b.note;
-    }
-  });
-
-  const periodItems = (d.items || []).filter(x => sel === 'ALL' || x.month === sel);
-  const cAll = periodItems.length;
-  const cMissing = periodItems.filter(x => smpClassify(x) === 'MISSING').length;
-  const cDone = periodItems.filter(x => smpClassify(x) === 'DONE').length;
-  const cOther = periodItems.filter(x => smpClassify(x) === 'OTHER').length;
-  const deliveredCount = cMissing + cDone;
-  const sowPct = deliveredCount > 0 ? Math.round(cDone / deliveredCount * 100) : 0;
-
-  const qs = S.sq.toLowerCase();
-  const filtered = periodItems.filter(x => {
-    const cls = smpClassify(x);
-    if (S.smpFilter !== 'ALL' && cls !== S.smpFilter) return false;
-    if (!qs) return true;
-    return (x.name + ' ' + x.handle + ' ' + x.product + ' ' + x.cm + ' ' + x.channelId).toLowerCase().includes(qs);
-  });
-
-  const pillsHtml = '<div class="m-switch" role="group" aria-label="Switch Sample Month">'
-    + '<button class="m-pill' + (sel === 'ALL' ? ' on' : '') + '" onclick="setSmpMonth(\'ALL\')">' + esc(t('allMonths')) + '</button>'
-    + ms.map(m => '<button class="m-pill' + (sel === m ? ' on' : '') + '" onclick="setSmpMonth(\'' + m + '\')">' + esc(mName(m)) + '</button>').join('')
-    + '</div>';
-
-  const quotaHtml = '<div class="quota-bar" role="group" aria-label="Filter Sample Status">'
-    + '<button class="q-card' + (S.smpFilter === 'ALL' ? ' on' : '') + '" onclick="setSmpFilter(\'ALL\')">'
-    + '<div class="q-top"><span>' + esc(t('smpAllItems')) + '</span><span>100%</span></div>'
-    + '<b>' + num(cAll) + '</b><small>' + esc(t('smpAllSub')) + '</small></button>'
-
-    + '<button class="q-card warn-under' + (S.smpFilter === 'MISSING' ? ' on' : '') + '" onclick="setSmpFilter(\'MISSING\')">'
-    + '<div class="q-top"><span style="color:var(--down)">● ' + esc(t('smpMissingSow')) + '</span><span>' + (cAll ? Math.round(cMissing / cAll * 100) : 0) + '%</span></div>'
-    + '<b style="color:var(--down)">' + num(cMissing) + '</b><small>' + esc(t('smpMissingSowSub')) + '</small></button>'
-
-    + '<button class="q-card warn-over' + (S.smpFilter === 'DONE' ? ' on' : '') + '" onclick="setSmpFilter(\'DONE\')">'
-    + '<div class="q-top"><span style="color:var(--up)">● ' + esc(t('smpDoneSow')) + '</span><span>' + (cAll ? Math.round(cDone / cAll * 100) : 0) + '%</span></div>'
-    + '<b style="color:var(--up)">' + num(cDone) + '</b><small>' + esc(t('smpDoneSowSub')) + '</small></button>'
-
-    + '<button class="q-card warn-exact' + (S.smpFilter === 'OTHER' ? ' on' : '') + '" onclick="setSmpFilter(\'OTHER\')">'
-    + '<div class="q-top"><span style="color:var(--warn)">● ' + esc(t('smpOtherStatus')) + '</span><span>' + (cAll ? Math.round(cOther / cAll * 100) : 0) + '%</span></div>'
-    + '<b style="color:var(--warn)">' + num(cOther) + '</b><small>' + esc(t('smpOtherSub')) + '</small></button>'
-    + '</div>';
-
-  el.innerHTML = pillsHtml
-    + '<div class="stats rev-stats">'
-    + '<div class="stat"><b>' + idr(sumBudget) + '</b><span>' + esc(t('smpBudgetCard')) + '</span>' + (budgetNote ? '<small class="none">' + esc(budgetNote) + '</small>' : '') + '</div>'
-    + '<div class="stat"><b class="rev-val">' + idr(sumExhausted) + '</b><span>' + esc(t('smpExhaustedCard')) + '</span><small class="none">' + (sumBudget > 0 ? Math.round(sumExhausted / sumBudget * 100) : 0) + '% terpakai</small></div>'
-    + '<div class="stat"><b class="' + (sumRemaining >= 0 ? 'up' : 'down') + '">' + idr(sumRemaining) + '</b><span>' + esc(t('smpRemainingCard')) + '</span></div>'
-    + '<div class="stat"><b>' + sowPct + '% (' + cDone + '/' + deliveredCount + ')</b><span>' + esc(t('smpSowRateCard')) + '</span></div>'
-    + '</div>'
-    + quotaHtml
-    + '<div class="card">'
-    + '<div class="top" style="padding-bottom:12px">'
-    + '<span class="card-title" style="margin:0">' + esc(t('smpTitle')) + ' (' + num(filtered.length) + ')</span>'
-    + '<input id="sq" value="' + esc(S.sq) + '" oninput="S.sq=this.value;smpRender()" placeholder="' + esc(t('filterCreators')) + '" aria-label="Filter sample requests">'
-    + '</div>'
-    + (filtered.length
-      ? '<div class="scroll"><table><thead><tr>'
-        + '<th>' + esc(t('creator')) + '</th>'
-        + '<th>' + esc(t('smpProduct')) + '</th>'
-        + '<th>' + esc(t('month')) + '</th>'
-        + '<th>' + esc(t('smpActualPrice')) + '</th>'
-        + '<th>ACC / ' + esc(t('smpShipStatus')) + '</th>'
-        + '<th>' + esc(t('smpSowLinks')) + '</th>'
-        + '<th>' + esc(t('phone')) + '</th>'
-        + '</tr></thead><tbody>'
-        + filtered.map(x => {
-          const cls = smpClassify(x);
-          const rowCls = (x.channelId ? 'link ' : '') + (cls === 'MISSING' ? 'hl-under' : '');
-          const clickAttr = x.channelId ? ' onclick="inspectCreator(\'' + esc(x.channelId) + '\')"' : '';
-          const safeProd = /^https?:\/\//i.test(x.productUrl) ? x.productUrl : '';
-          const shipBadge = /delivered/i.test(x.shipping)
-            ? '<span class="badge badge-over">' + esc(x.shipping) + '</span>'
-            : (x.shipping ? '<span class="badge badge-exact">' + esc(x.shipping) + '</span>' : '<span class="badge badge-muted">' + esc(x.acc || 'Pending') + '</span>');
-
-          return '<tr class="' + rowCls + '"' + clickAttr + '>'
-            + '<td style="text-align:left"><b>' + esc(x.handle || x.name) + '</b>' + (x.cm ? '<div class="h">CM: ' + esc(x.cm) + '</div>' : '') + '</td>'
-            + '<td class="prod-cell" style="text-align:left">' + (safeProd ? '<a href="' + esc(safeProd) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' + esc(x.product) + '</a>' : esc(x.product)) + '</td>'
-            + '<td>' + esc(mName(x.month) || '—') + '</td>'
-            + '<td><b>' + (x.actualPrice ? idr(x.actualPrice) : '—') + '</b></td>'
-            + '<td>' + shipBadge + '</td>'
-            + '<td style="text-align:left">' + sowLinksHtml(x.sows, x.shipping, x.acc) + '</td>'
-            + '<td style="text-align:left">' + (x.phone
-              ? '<span>' + esc(x.phone) + '</span><button type="button" class="copy-pill" onclick="event.stopPropagation();copyPhone(this,\'' + esc(x.phone) + '\')" title="' + esc(t('copyBtn')) + '">' + COPY_ICON + '</button>'
-              : '—') + '</td>'
-            + '</tr>';
-        }).join('')
-        + '</tbody></table></div>'
-      : '<div class="empty">' + esc(t('noMatchFilter')) + '</div>')
-    + '<div class="foot">' + esc(t('tipClickCreator')) + '</div>'
-    + '</div>';
-
-  if (wasFocused) {
-    const inp = $('sq');
-    if (inp) { inp.focus(); inp.setSelectionRange(cursorPos, cursorPos); }
-  }
-}
-
-/* ----- TAB 6: TARGET TRACKER ----- */
+/* ----- TAB 5: TARGET TRACKER ----- */
 const pctFmt = x => new Intl.NumberFormat(S.lang === 'id' ? 'id-ID' : 'en-US', {maximumFractionDigits: 2}).format(x * 100) + '%';
 const signedPct = x => (x >= 0 ? '+' : '') + pctFmt(x);
 const yearOf = (label, fb) => { const m = String(label || '').match(/\d{4}/); return m ? m[0] : fb; };
@@ -1386,7 +1225,7 @@ function tgtProjCalc(d, main) {
   const done = ms.slice(0, oi).filter(x => x.total > 0).map(x => x.total);
   if (!done.length) return null;
   const recent = done.slice(-3);
-  const dim = d.today.daysInMonth, elapsed = Math.max(0, d.today.day - 1);
+  const dim = d.today.daysInMonth, elapsed = Math.max(0, d.today.day - 1); // days of data assumed complete
   const remainFrac = (dim - elapsed) / dim, future = ms.length - 1 - oi, left = remainFrac + future;
   const cur = ms[oi].total;
   const avg = recent.reduce((s, x) => s + x, 0) / recent.length;
@@ -1468,7 +1307,10 @@ function tgtProjection(d, main, rows) {
 }
 
 /* ----- TAB 2: OVERALL GMV PER MONTH ----- */
-function setGmvMonth(m) { S.gmvMonth = m; gmvRender(); }
+function setGmvMonth(m) {
+  S.gmvMonth = m;
+  gmvRender();
+}
 
 function overallChart(ms, gmvArr, vidArr, og, selectedMonth) {
   const W = 680, H = 175, L = 54, R = 38, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
@@ -1637,9 +1479,139 @@ function gmvRender() {
   }
 }
 
+/* ----- UPLOAD PATTERN (consecutive months) ----- */
+const UP_MIN = 4;     // a month counts when the creator uploaded at least this many videos
+const UP_STREAK = 3;  // number of consecutive months required
+
+function setUpView(v) { S.upView = v; upRender(); }
+function setPatFilter(f) { S.patFilter = f; upRender(); }
+
+function upSwitchHtml() {
+  return '<div class="m-switch" role="group" aria-label="View" style="margin-top:0">'
+    + '<button class="m-pill' + (S.upView === 'sum' ? ' on' : '') + '" onclick="setUpView(\'sum\')">' + esc(t('upViewSummary')) + '</button>'
+    + '<button class="m-pill' + (S.upView === 'pat' ? ' on' : '') + '" onclick="setUpView(\'pat\')">' + esc(t('upViewPattern')) + '</button></div>';
+}
+
+function patAnalyze(r) {
+  const a = r.months.indexOf(r.latest), b = r.ongoing ? r.months.indexOf(r.ongoing) : -1;
+  const ms = r.months.slice(0, Math.max(a, b) + 1);
+  const og = b > -1 ? r.ongoing : '', oi = og ? ms.indexOf(og) : -1;
+  const rows = r.creators.map(c => {
+    const v = ms.map(m => (c.videos && c.videos[m]) || 0);
+    // The running month counts only when it already reaches the minimum, and never breaks a streak.
+    const scan = withOngoing => {
+      let run = 0, best = 0, firstEnd = -1;
+      v.forEach((n, i) => {
+        if (i === oi && !withOngoing) return;
+        if (n >= UP_MIN) { run++; if (run > best) best = run; if (run === UP_STREAK && firstEnd < 0) firstEnd = i; }
+        else if (i !== oi) run = 0;
+      });
+      return { run, best, firstEnd };
+    };
+    const conf = scan(false), prov = scan(true);
+    const done = conf.best >= UP_STREAK, doneProv = !done && prov.best >= UP_STREAK;
+    const need = UP_STREAK - prov.run;
+    const status = done ? 'DONE' : doneProv ? 'PROV' : need === 1 ? 'NEED1' : need === 2 ? 'NEED2' : 'NONE';
+    const end = done ? conf.firstEnd : doneProv ? prov.firstEnd : -1;
+    return {
+      c, v, cur: prov.run, status,
+      range: end > -1 ? [ms[end - UP_STREAK + 1], ms[end]] : null,
+      total: v.reduce((s, n) => s + n, 0),
+      pending: oi > -1 && v[oi] < UP_MIN
+    };
+  });
+  return { ms, og, oi, rows };
+}
+
+function patRender() {
+  const r = S.rev;
+  if (!r) return;
+  const wasFocused = document.activeElement && document.activeElement.id === 'pq';
+  const pos = wasFocused ? document.activeElement.selectionStart : 0;
+  const { ms, og, oi, rows } = patAnalyze(r);
+
+  const isDone = x => x.status === 'DONE' || x.status === 'PROV';
+  const base = rows.filter(x => !S.patHide || x.total > 0);
+  const match = (x, k) => k === 'ALL' || (k === 'DONE' ? isDone(x) : x.status === k);
+  const cnt = k => base.filter(x => match(x, k)).length;
+  const qs = S.pq.toLowerCase();
+  const rank = { DONE: 0, PROV: 1, NEED1: 2, NEED2: 3, NONE: 4 };
+  const list = base
+    .filter(x => match(x, S.patFilter) && (!qs || (x.c.name + ' ' + x.c.category + ' ' + x.c.id).toLowerCase().includes(qs)))
+    .sort((x, y) => rank[x.status] - rank[y.status] || y.total - x.total || x.c.name.localeCompare(y.c.name));
+
+  const card = (key, cls, color, label, sub) =>
+    '<button class="q-card ' + cls + (S.patFilter === key ? ' on' : '') + '" onclick="setPatFilter(\'' + key + '\')">'
+    + '<div class="q-top"><span' + (color ? ' style="color:' + color + '"' : '') + '>' + (color ? '● ' : '') + esc(label) + '</span><span>' + (base.length ? Math.round(cnt(key) / base.length * 100) : 0) + '%</span></div>'
+    + '<b' + (color ? ' style="color:' + color + '"' : '') + '>' + num(cnt(key)) + '</b><small>' + esc(sub) + '</small></button>';
+  const cards = '<div class="quota-bar five" role="group" aria-label="Filter">'
+    + card('ALL', '', '', t('patAll'), t('patAllSub'))
+    + card('DONE', 'warn-over', 'var(--up)', t('patDone', { k: UP_STREAK }), t('patDoneSub'))
+    + card('NEED1', 'warn-exact', 'var(--warn)', t('patNeed', { n: 1 }), t('patNeedSub', { c: UP_STREAK - 1, k: UP_STREAK }))
+    + card('NEED2', 'warn-exact', 'var(--warn)', t('patNeed', { n: 2 }), t('patNeedSub', { c: UP_STREAK - 2, k: UP_STREAK }))
+    + card('NONE', 'warn-under', 'var(--down)', t('patNone'), t('patNoneSub'))
+    + '</div>';
+
+  const legend = '<div class="pat-legend">'
+    + '<span><span class="pt pt-under">3</span>' + esc(t('patLegUnder', { n: UP_MIN })) + '</span>'
+    + '<span><span class="pt pt-exact">4</span>' + esc(t('patLegExact', { n: UP_MIN })) + '</span>'
+    + '<span><span class="pt pt-over">6</span>' + esc(t('patLegOver', { n: UP_MIN })) + '</span>'
+    + (og ? '<span><span class="pt pt-under pt-og">2</span>' + esc(t('patLegOngoing')) + '</span>' : '')
+    + '</div>';
+
+  const cell = (n, m) => {
+    const k = n < UP_MIN ? 'under' : n === UP_MIN ? 'exact' : 'over';
+    return '<span class="pt pt-' + k + (m === og ? ' pt-og' : '') + '" title="' + esc(mName(m) + ': ' + num(n) + ' ' + t('videos').toLowerCase() + (m === og ? ' (' + t('ongoing') + ')' : '')) + '">' + num(n) + '</span>';
+  };
+  const dots = x => {
+    let s = '';
+    for (let i = 0; i < UP_STREAK; i++) s += '<i class="sd' + (i < x.cur ? ' on' : '') + '"></i>';
+    return '<span class="sdots">' + s + '</span><b>' + x.cur + '</b> ' + esc(t('patMonthsShort'));
+  };
+  const badge = x => {
+    const sub = txt => '<span class="pat-sub">' + esc(txt) + '</span>';
+    if (x.status === 'DONE') return '<span class="badge badge-over">' + esc(t('patBadgeDone')) + '</span>' + sub(t('patDoneRange', { a: mShort(x.range[0]), b: mShort(x.range[1]) }));
+    if (x.status === 'PROV') return '<span class="badge badge-exact">' + esc(t('patBadgeProv')) + '</span>' + sub(t('patProvNote', { m: mName(og) }));
+    const pend = x.pending ? sub(t('patPending', { m: mName(og), a: x.v[oi], b: UP_MIN })) : '';
+    if (x.status === 'NONE') return '<span class="badge badge-none">' + esc(t('patBadgeNone')) + '</span>' + pend;
+    return '<span class="badge badge-exact">' + esc(t('patBadgeNeed', { n: x.status === 'NEED1' ? 1 : 2 })) + '</span>' + pend;
+  };
+
+  const table = list.length
+    ? '<div class="scroll"><table class="pat-tbl"><thead><tr><th>' + esc(t('creator')) + '</th>'
+      + ms.map(m => '<th>' + esc(mShort(m)) + (m === og ? '<span class="dot-og" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-left:4px" title="' + esc(t('ongoing')) + '"></span>' : '') + '</th>').join('')
+      + '<th>' + esc(t('patStreak')) + '</th><th>' + esc(t('patStatus')) + '</th></tr></thead><tbody>'
+      + list.map(x => '<tr class="link" onclick="inspectCreator(\'' + esc(x.c.id) + '\')"><td><b>' + esc(x.c.name) + '</b><span class="pat-sub">' + esc(x.c.category || '—') + '</span></td>'
+        + x.v.map((n, i) => '<td>' + cell(n, ms[i]) + '</td>').join('')
+        + '<td style="white-space:nowrap">' + dots(x) + '</td><td>' + badge(x) + '</td></tr>').join('')
+      + '</tbody></table></div>'
+    : '<div class="empty">' + esc(t('noMatchFilter')) + '</div>';
+
+  $('uOut').innerHTML = upSwitchHtml()
+    + (og ? '<div class="miss">' + esc(mName(og)) + ' ' + esc(t('ongoingNote')) + '</div>' : '')
+    + cards
+    + '<div class="card"><div class="top" style="padding-bottom:12px;gap:10px;flex-wrap:wrap">'
+    + '<span class="card-title" style="margin:0">' + esc(t('patTitle')) + ' <span class="h" style="font-weight:400;margin-left:8px">' + esc(t('patRule', { n: UP_MIN, k: UP_STREAK })) + '</span></span>'
+    + '<span style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+    + '<label style="font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center"><input type="checkbox" ' + (S.patHide ? 'checked ' : '') + 'onchange="S.patHide=this.checked;upRender()"> ' + esc(t('patHideIdle')) + '</label>'
+    + '<input id="pq" value="' + esc(S.pq) + '" oninput="S.pq=this.value;upRender()" placeholder="' + esc(t('filterCreators')) + '" aria-label="Filter creators"></span></div>'
+    + '<div style="padding:0 18px">' + legend + '</div>'
+    + table
+    + '<div class="foot">' + esc(t('tipClickCreator')) + '</div></div>';
+
+  if (wasFocused) { const el = $('pq'); el.focus(); el.setSelectionRange(pos, pos); }
+}
+
 /* ----- TAB 3: UPLOAD CONTENT MONITORING ----- */
-function setUpMonth(m) { S.upMonth = m; upRender(); }
-function setUpFilter(f) { S.upFilter = f; upRender(); }
+function setUpMonth(m) {
+  S.upMonth = m;
+  upRender();
+}
+
+function setUpFilter(f) {
+  S.upFilter = f;
+  upRender();
+}
 
 function uploadChart(ms, vidArr, og, selectedMonth) {
   const W = 680, H = 155, L = 46, R = 14, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
@@ -1667,6 +1639,7 @@ function uploadChart(ms, vidArr, og, selectedMonth) {
 function upRender() {
   const r = S.rev;
   if (!r) return;
+  if (S.upView === 'pat') { patRender(); return; }
   const wasFocused = document.activeElement && document.activeElement.id === 'uq';
   const cursorPos = wasFocused ? document.activeElement.selectionStart : 0;
 
@@ -1739,7 +1712,7 @@ function upRender() {
 
   const periodLabel = sel === 'ALL' ? t('allMonths') + ' (' + r.year + ')' : mName(sel) + ' ' + r.year + (sel === og ? ' (' + t('ongoing') + ')' : '');
 
-  $('uOut').innerHTML = pillsHtml
+  $('uOut').innerHTML = upSwitchHtml() + pillsHtml
     + (sel === og ? '<div class="miss">' + esc(mName(og)) + ' ' + esc(t('ongoingNote')) + '</div>' : '')
     + (sel === 'ALL' ? '<div class="h" style="margin-bottom:8px">' + esc(t('ytdQuotaNote', { n: ms.length })) + '</div>' : '')
     + quotaMenuHtml
@@ -1798,7 +1771,10 @@ function inspectCreator(id) {
 }
 
 /* ----- TAB 1: CREATOR LOOKUP ----- */
-function setCreatorMonth(m) { S.creatorMonth = m; show(); }
+function setCreatorMonth(m) {
+  S.creatorMonth = m;
+  show();
+}
 
 async function find(text) {
   text = typeof text === 'string' ? text : $('q').value;
@@ -1885,41 +1861,6 @@ function phoneHtml(phone) {
     + COPY_ICON + '<span>' + esc(t('copyBtn')) + '</span></button></span>';
 }
 
-function creatorSamplesHtml(c) {
-  const list = c.samples || [];
-  const totalActual = list.reduce((s, x) => s + (/^yes/i.test(x.acc) ? (x.actualPrice || 0) : 0), 0);
-  if (!list.length) {
-    return '<div class="card card-pad"><div class="card-title"><span>' + esc(t('smpCreatorHistory')) + '</span></div>'
-      + '<div class="h">' + esc(t('smpNoHistory')) + '</div></div>';
-  }
-  return '<div class="card">'
-    + '<div class="top" style="padding-bottom:10px">'
-    + '<span class="card-title" style="margin:0">' + esc(t('smpCreatorHistory')) + ' (' + list.length + ')</span>'
-    + '<span class="h">' + esc(t('smpActualSpent')) + ': <b>' + idr(totalActual) + '</b></span>'
-    + '</div>'
-    + '<div class="scroll"><table><thead><tr>'
-    + '<th>' + esc(t('smpProduct')) + '</th>'
-    + '<th>' + esc(t('month')) + '</th>'
-    + '<th>' + esc(t('smpActualPrice')) + '</th>'
-    + '<th>' + esc(t('smpShipStatus')) + '</th>'
-    + '<th>' + esc(t('smpSowLinks')) + '</th>'
-    + '</tr></thead><tbody>'
-    + list.map(x => {
-      const safeProd = /^https?:\/\//i.test(x.productUrl) ? x.productUrl : '';
-      const shipBadge = /delivered/i.test(x.shipping)
-        ? '<span class="badge badge-over">' + esc(x.shipping) + '</span>'
-        : (x.shipping ? '<span class="badge badge-exact">' + esc(x.shipping) + '</span>' : '<span class="badge badge-muted">' + esc(x.acc || 'Pending') + '</span>');
-      return '<tr>'
-        + '<td class="prod-cell" style="text-align:left">' + (safeProd ? '<a href="' + esc(safeProd) + '" target="_blank" rel="noopener">' + esc(x.product) + '</a>' : esc(x.product)) + '</td>'
-        + '<td>' + esc(mName(x.month) || '—') + '</td>'
-        + '<td><b>' + (x.actualPrice ? idr(x.actualPrice) : '—') + '</b></td>'
-        + '<td>' + shipBadge + '</td>'
-        + '<td style="text-align:left">' + sowLinksHtml(x.sows, x.shipping, x.acc) + '</td>'
-        + '</tr>';
-    }).join('')
-    + '</tbody></table></div></div>';
-}
-
 function page(c) {
   const r = S.r, ms = shown(), og = r.ongoing && ms.indexOf(r.ongoing) > -1 ? r.ongoing : '';
   if (S.creatorMonth !== 'ALL' && ms.indexOf(S.creatorMonth) === -1) S.creatorMonth = 'ALL';
@@ -1933,8 +1874,6 @@ function page(c) {
   const max = Math.max(1, ...ms.map(m => c.gmv[m]));
   const f = flag(c);
   const safeUrl = /^https:\/\/(www\.)?youtube\.com\//.test(c.url) ? c.url : '';
-  const actualSampleCost = (c.samples || []).reduce((s, x) => s + (/^yes/i.test(x.acc) ? (x.actualPrice || 0) : 0), 0);
-
   const facts = [
       ['Channel ID', c.id],
       [t('subscribers'), c.subscribers || '—'],
@@ -1971,7 +1910,7 @@ function page(c) {
     + '<div class="stat"><b class="rev-val">' + money(trev) + '</b><span>' + esc(t('agencyRevShort', { pc: pc })) + '</span></div>'
     + '<div class="stat"><b>' + num(tv) + '</b><span>' + esc(t('videosUploaded')) + '</span></div>'
     + '<div class="stat"><b>' + (tv && tg ? money(tg / tv) : '—') + '</b><span>' + esc(t('gmvPerVid')) + '</span></div>'
-    + '<div class="stat"><b>' + idr(budget(tg)) + '</b><span>' + esc(t('samplesBudget')) + '</span>' + (actualSampleCost > 0 ? '<small class="none">' + esc(t('smpActualSpent')) + ': ' + idr(actualSampleCost) + '</small>' : '') + '</div></div>'
+    + '<div class="stat"><b>' + idr(budget(tg)) + '</b><span>' + esc(t('samplesBudget')) + '</span></div></div>'
     + '<div class="legend"><span><i style="background:var(--accent)"></i>GMV</span><span><i style="background:var(--vid)"></i>' + esc(t('videosUploaded')) + '</span><span class="h" style="margin-left:auto">' + esc(t('clickBarHint')) + '</span></div>'
     + '<div class="chartbox">' + chart(c, ms, sel) + '</div>'
     + '<div class="scroll"><table><thead><tr>'
@@ -2001,8 +1940,7 @@ function page(c) {
         : '')
     + '</tbody></table></div>'
     + '<div class="foot">' + esc(t('sampleFoot', { pc: pc, fx: new Intl.NumberFormat('id-ID').format(activeFx()) }))
-    + (og ? esc(t('provisionalFoot', { m: mName(og) })) : '') + '</div></div>'
-    + creatorSamplesHtml(c);
+    + (og ? esc(t('provisionalFoot', { m: mName(og) })) : '') + '</div></div>';
 }
 
 function listView(r) {
@@ -2045,7 +1983,10 @@ function show() {
 }
 
 /* ----- TAB 4: REVENUE PAGE ----- */
-function setRevMonth(m) { S.revMonth = m; revRender(); }
+function setRevMonth(m) {
+  S.revMonth = m;
+  revRender();
+}
 
 function revChart(ms, tot, og, selectedMonth, bon) {
   const W = 680, H = 155, L = 56, R = 14, T = 12, B = 36, pw = W - L - R, ph = H - T - B, st = pw / ms.length;
@@ -2176,12 +2117,19 @@ function revRender() {
 
   if (wasFocused) {
     const inp = $('rq');
-    if (inp) { inp.focus(); inp.setSelectionRange(cursorPos, cursorPos); }
+    if (inp) {
+      inp.focus();
+      inp.setSelectionRange(cursorPos, cursorPos);
+    }
   }
 }
 
-$('rOut').addEventListener('input', e => { if (e.target && e.target.id === 'rq') { S.rq = e.target.value; revRender(); } });
-$('rOut').addEventListener('change', e => { if (e.target && e.target.id === 'rOnly') { S.ronly = e.target.checked; revRender(); } });
+$('rOut').addEventListener('input', e => {
+  if (e.target && e.target.id === 'rq') { S.rq = e.target.value; revRender(); }
+});
+$('rOut').addEventListener('change', e => {
+  if (e.target && e.target.id === 'rOnly') { S.ronly = e.target.checked; revRender(); }
+});
 $('rOut').addEventListener('click', e => {
   const tSort = e.target.closest('[data-sort]');
   if (!tSort) return;
@@ -2249,14 +2197,13 @@ $('q').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); find(); }
 });
 
-/* ----- URL QUERY PARAMS ----- */
+/* ----- URL QUERY PARAMS (VERCEL / BROWSER) ----- */
 (function initFromUrl() {
   const p = Object.fromEntries(new URLSearchParams(window.location.search));
   if (p.lang === 'en') setLang('en');
   if (p.page === 'revenue') setTab('rev');
   else if (p.page === 'gmv') setTab('gmv');
   else if (p.page === 'target') setTab('tgt');
-  else if (p.page === 'samples') setTab('smp');
   else if (p.page === 'uploads' || p.page === 'konten') setTab('up');
   if (p.id) { $('q').value = p.id; find(p.id); }
 })();
